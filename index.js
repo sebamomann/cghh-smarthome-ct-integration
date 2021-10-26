@@ -1,6 +1,7 @@
 'use strict';
 
 const moment = require("moment");
+moment.locale('de');
 
 const { getEvents } = require("./churchtools/events");
 const { State } = require("./churchtools/state.class");
