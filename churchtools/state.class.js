@@ -11,7 +11,7 @@ class State {
     }
 
     writeToFile() {
-        const json = JSON.stringify(this.state, null, 4);
+        const json = JSON.stringify(this.state, null, 2);
         fs.writeFileSync(this.FILE_NAME, json, 'utf8');
     }
 

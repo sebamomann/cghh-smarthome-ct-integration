@@ -1,8 +1,6 @@
 'use strict';
 
 const axios = require('axios');
-const moment = require('moment');
-const { MAXIMALE_VORLAUFZEIT } = require('../constants');
 
 async function getEvents() {
     var url = "https://heidelsheim.church.tools/index.php?q=churchcal/ajax&func=getCalendarEvents&from=-1&to=1";

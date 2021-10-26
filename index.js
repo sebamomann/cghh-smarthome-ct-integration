@@ -5,7 +5,8 @@ moment.tz.setDefault("Europe/Berlin");
 
 const { getEvents } = require("./churchtools/events");
 const { State } = require("./churchtools/state.class");
-const { sendRequest } = require("./examples/sendRequestToAssistant");
+const { sendRequest } = require("./examples/google-assistant");
+const { EventTemperatureMapper } = require("./churchtools/event-temperature.mapper");
 const CronJob = require('cron').CronJob;
 
 require('dotenv').config();
@@ -16,8 +17,13 @@ const cronInterval = 5; // minutes
 const job = new CronJob(process.env.CRON_DEFINITION, () => run());
 job.start();
 
+run();
+
+/**
+ * Initialize run for heating adjustment
+ */
 async function run() {
-    console.log("[" + moment().toLocaleString() + "] [CRON] Executing");
+    console.log("[CRON] Executing");
 
     state = new State();
     const events = await getEvents();
@@ -27,25 +33,58 @@ async function run() {
     state.writeToFile();
 }
 
+/**
+ * 1. Loop through events to check if thermostats can be adjusted to idle temperature
+ * 2. Loop through events to check if thermostats needs to be adjusted to be set to be heating
+ * 
+ * @param {*} events    Events to consider for thermostat adjustments
+ */
 function handleEvents(events) {
-    // handle idle first
+    handleEventsForIdleAdjustments(events);
+    handleEventsForHeatingAdjustments(events);
+}
+
+/**
+ * Loop through each event.
+ * Execute booking management for passed event to heat booked rooms
+ * 
+ * @param {*} events
+ */
+function handleEventsForHeatingAdjustments(events) {
     events.forEach(event => {
-        const bookings = event.bookings;
-        const bookingKeys = Object.keys(bookings);
-
-        handleBookingsOfEvent(bookingKeys, bookings, event, false);
-    });
-
-    // handle heating after
-    events.forEach(event => {
-        const bookings = event.bookings;
-        const bookingKeys = Object.keys(bookings);
-
-        handleBookingsOfEvent(bookingKeys, bookings, event, true);
+        handleBookingsOfEvent(event, true);
     });
 }
 
-function handleBookingsOfEvent(bookingKeys, bookings, event, forHeating) {
+/**
+ * Loop through each event.
+ * Execute booking management for passed event to set booked rooms to idle
+ *
+ * @param {*} events
+ */
+function handleEventsForIdleAdjustments(events) {
+    events.forEach(event => {
+        handleBookingsOfEvent(event, false);
+    });
+}
+
+/**
+ * Loop through each booking.
+ * When a booking includes a valid room reservation execute preheating or idle for the booked room.
+ * 
+ * @param {*} bookingKeys 
+ * @param {*} bookings 
+ * @param {*} event 
+ * @param {*} forHeating 
+ */
+function handleBookingsOfEvent(event, forHeating) {
+    const bookings = event.bookings;
+
+    if (!bookings)
+        return;
+
+    const bookingKeys = Object.keys(bookings);
+
     bookingKeys.forEach(bookingKey => {
         const booking = bookings[bookingKey];
         const roomId = booking.resource_id;
@@ -54,20 +93,22 @@ function handleBookingsOfEvent(bookingKeys, bookings, event, forHeating) {
 
         if (room) {
             if (forHeating) {
-                handleBookingForHeating(event, room);
+                handleRoomForEventHeating(event, room);
             } else {
-                handleBookingForIdle(event, room);
+                handleRoomForEventIdle(event, room);
             }
         }
     });
 }
 
-function handleBookingForHeating(event, room) {
-    const currentTime = moment();
-    const eventPreheatStartTime = moment(event.startdate).subtract(room.heatingOffset, "minute");
-    const eventPreheatStartTimeInterval = moment(event.startdate).subtract(room.heatingOffset + cronInterval, "minute");
-
-    const isPreheatingStartTimeInTimeframe = currentTime.isBetween(eventPreheatStartTimeInterval, eventPreheatStartTime);
+/**
+ * Check if preheating is needed for the passed room
+ *
+ * @param {*} event     Event to check if heating is needed
+ * @param {*} room      Room to manage
+ */
+function handleRoomForEventHeating(event, room) {
+    const isPreheatingStartTimeInTimeframe = isCurrentTimeIsWithinTriggerTimeframe(event.startdate, room.heatingOffset);
     const isRoomAlreadyHeating = room.currentlyHeating;
 
     // check needed so manual override is not overridden by code
@@ -76,12 +117,14 @@ function handleBookingForHeating(event, room) {
     }
 }
 
-function handleBookingForIdle(event, room) {
-    const currentTime = moment();
-    const eventIdleStartTime = moment(event.enddate).subtract(room.heatingOffsetIdle, "minute");
-    const eventIdleStartTimeInterval = moment(event.enddate).subtract(room.heatingOffsetIdle + cronInterval, "minute");
-
-    const isIdleStartTimeInTimeframe = currentTime.isBetween(eventIdleStartTimeInterval, eventIdleStartTime);
+/**
+ * Check if heatind can be shut down for the passed room to save energy
+ *
+ * @param {*} event     Event to check if shutdown is possible
+ * @param {*} room      Room to manage
+ */
+function handleRoomForEventIdle(event, room) {
+    const isIdleStartTimeInTimeframe = isCurrentTimeIsWithinTriggerTimeframe(event.enddate, room.heatingOffsetIdle);
     const isRoomCurrentlyHeatingForThisEvent = room.heatedForEvent === event.bezeichnung;
 
     // check needed so manual override is not overridden by code
@@ -90,24 +133,72 @@ function handleBookingForIdle(event, room) {
     }
 }
 
+/**
+ * Check if current time is within timeframe to trigger heating/idle.
+ * Timeframe is defined as
+ * 
+ * FROM: now - (offset + cron interval)
+ * TO:   now - (offset) 
+ * 
+ * When from < now < to then return true
+ * 
+ * @return 
+ */
+function isCurrentTimeIsWithinTriggerTimeframe(date, offset) {
+    const currentTime = moment();
+    const upperIntervalBorder = moment(date).subtract(offset, "minute");
+    const lowerIntervalBorder = moment(date).subtract(offset + cronInterval, "minute");
+
+    return currentTime.isBetween(lowerIntervalBorder, upperIntervalBorder);
+}
+
+/**
+ * Prepare and send the request to google assistant for adjust the thermostat for heating
+ * 
+ * @param {*} room      Room containing the Thermostat that needs to be updated
+ * @param {*} event     Event for logging reasons
+ */
 function sendRequestToThermostat(room, event) {
     room.currentlyHeating = true;
     room.heatedForEvent = event.bezeichnung;
 
-    const request = `Setze die Temperatur in ${room.homematicName} auf ${room.desiredTemperature} Grad`;
+    const temperature = defineTemperatureForEvent(event, room);
+    const request = `Setze die Temperatur in ${room.homematicName} auf ${temperature} Grad`;
 
-    console.log(`[${moment()}] [ROOM UPDATE] [+] ${room.homematicName} to ${room.desiredTemperature} for ${event.bezeichnung} starting at ${event.startdate}`);
+    console.log(`[${moment()}] [ROOM UPDATE] [+] ${room.homematicName} to ${temperature === room.desiredTemperature ? "" : "[*] "}${temperature} for ${event.bezeichnung} starting at ${event.startdate}`);
     sendRequest(request);
 }
 
-function sendRequestToThermostatIdle(room, event, heating) {
+/**
+ * Prepare and send the request to google assistant for adjust the thermostat for idle
+ *
+ * @param {*} room      Room containing the Thermostat that needs to be updated
+ * @param {*} event     Event for logging reasons
+ */
+function sendRequestToThermostatIdle(room, event) {
     room.currentlyHeating = false;
     room.heatedForEvent = null;
 
     const request = `Setze die Temperatur in ${room.homematicName} auf ${room.desiredTemperatureIdle} Grad`;
 
-    console.log(`[${moment()}] [ROOM UPDATE] [-] ${room.homematicName} to ${room.desiredTemperatureIdle} for ${event.bezeichnung} ending at ${event.startdate}`);
+    console.log(`[${moment()}] [ROOM UPDATE] [-] ${room.homematicName} to ${room.desiredTemperatureIdle} for ${event.bezeichnung} ending at ${event.enddate}`);
     sendRequest(request);
 }
 
-run();
+/**
+ * Get the temperature that needs to be set for the event and room
+ * 
+ * @param {*} event     Event that needs a preheated room
+ * @param {*} room      Room that needs to be preheated
+ * 
+ * @returns Integer containing the desired temperature for the given room and event
+ */
+function defineTemperatureForEvent(event, room) {
+    var temperature = EventTemperatureMapper.getTemperatureForEvent(event.bezeichnung);
+
+    if (!temperature) {
+        temperature = room.desiredTemperature;
+    }
+
+    return temperature;
+}
