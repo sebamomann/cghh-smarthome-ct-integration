@@ -1,6 +1,6 @@
 {
   "name": "google-assistant",
-  "version": "0.7.0",
+  "version": "0.0.1",
   "description": "node.js port of the 3rd party Google Assistant SDK",
   "main": "index.js",
   "scripts": {
@@ -9,23 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://endoplasmic@github.com/endoplasmic/google-assistant.git"
+    "url": "git+https://github.com/sebamomann/cghh-smarthome-ct-integration.git"
   },
-  "keywords": [
-    "google assistant"
-  ],
-  "author": "Scott Ysebert <endoplasmic@gmail.com>",
-  "contributors": [
-    {
-      "name": "Carlos Knoke Flores",
-      "email": "carlos@knoke.net"
-    }
-  ],
+  "author": "Seba Momann <git@sebamomann.de>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/endoplasmic/google-assistant/issues"
+    "url": "https://github.com/sebamomann/cghh-smarthome-ct-integration/issues"
   },
-  "homepage": "https://github.com/endoplasmic/google-assistant#readme",
+  "homepage": "https://github.com/sebamomann/cghh-smarthome-ct-integration",
   "dependencies": {
     "@grpc/grpc-js": "^1.3.7",
     "axios": "^0.24.0",
