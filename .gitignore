@@ -3,3 +3,4 @@ examples/*.json
 secrets.json
 tokens.json
 churchtools/state.json
+.env
