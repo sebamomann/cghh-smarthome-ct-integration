@@ -1,0 +1,49 @@
+{
+    "rooms": [
+        {
+            "id": "3",
+            "name": "Godi-Saal",
+            "currentlyHeated": false,
+            "heatedForEvent": null,
+            "heatingOffset": 60,
+            "heatingOffsetIdle": 60,
+            "homematicName": "Godi-Saal",
+            "desiredTemperature": 21,
+            "desiredTemperatureIdle": 16,
+            "currentlyHeating": false
+        },
+        {
+            "id": "8",
+            "name": "SAK-Raum",
+            "currentlyHeated": false,
+            "heatedForEvent": null,
+            "heatingOffset": 60,
+            "heatingOffsetIdle": 60,
+            "homematicName": "Jugendraum EG",
+            "desiredTemperature": 21,
+            "desiredTemperatureIdle": 16
+        },
+        {
+            "id": "9",
+            "name": "Jugend-Raum",
+            "currentlyHeated": false,
+            "heatedForEvent": null,
+            "heatingOffset": 60,
+            "heatingOffsetIdle": 60,
+            "homematicName": "Jugendraum 2. OG",
+            "desiredTemperature": 21,
+            "desiredTemperatureIdle": 16
+        },
+        {
+            "id": "5",
+            "name": "Seitenbereich",
+            "currentlyHeated": false,
+            "heatedForEvent": null,
+            "heatingOffset": 60,
+            "heatingOffsetIdle": 60,
+            "homematicName": "Seitenbereich",
+            "desiredTemperature": 21,
+            "desiredTemperatureIdle": 16
+        }
+    ]
+}
