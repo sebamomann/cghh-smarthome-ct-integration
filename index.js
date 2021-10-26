@@ -1,12 +1,19 @@
 'use strict';
 
+const moment = require("moment");
+
 const { getEvents } = require("./churchtools/events");
 const { State } = require("./churchtools/state.class");
-const moment = require("moment");
 const { sendRequest } = require("./examples/sendRequestToAssistant");
+const CronJob = require('cron').CronJob;
+
+require('dotenv').config();
 
 var state;
 const cronInterval = 5; // minutes
+
+const job = new CronJob(process.env.CRON_DEFINITION, () => run());
+job.start();
 
 async function run() {
     console.log("[" + moment().toLocaleString() + "] [CRON] Executing");
