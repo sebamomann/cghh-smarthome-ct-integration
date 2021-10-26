@@ -1,7 +1,7 @@
 'use strict';
 
-const moment = require("moment");
-moment.locale('de');
+const moment = require('moment-timezone');
+moment().tz("Europe/Berlin").format();
 
 const { getEvents } = require("./churchtools/events");
 const { State } = require("./churchtools/state.class");
