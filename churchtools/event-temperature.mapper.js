@@ -10,7 +10,15 @@ class EventTemperatureMapper {
         const data = fs.readFileSync(this.FILE_NAME, 'utf8');
         const mappings = JSON.parse(data);
 
-        return mappings[eventName]?.desiredTemperature;
+        const mappingKeys = Object.keys(mappings);
+
+        mappingKeys.forEach(key => {
+            if (eventName.toLowerCase().includes(key.toLowerCase())) {
+                return mappings[key].desiredTemperature;
+            }
+        });
+
+        return undefined;
     }
 }
 

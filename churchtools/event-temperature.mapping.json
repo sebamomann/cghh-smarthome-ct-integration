@@ -1,5 +1,20 @@
 {
+  "Gottesdienst": {
+    "desiredTemperature": 18
+  },
   "Jungschar": {
-    "desiredTemperature": 19
+    "desiredTemperature": 18
+  },
+  "Frauenevent": {
+    "desiredTemperature": 21
+  },
+  "Gebet": {
+    "desiredTemperature": 21
+  },
+  "GenerationPlus": {
+    "desiredTemperature": 21
+  },
+  "Bibel & Brezel": {
+    "desiredTemperature": 21
   }
 }
