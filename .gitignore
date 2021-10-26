@@ -4,3 +4,4 @@ secrets.json
 tokens.json
 churchtools/state.json
 .env
+state.json
