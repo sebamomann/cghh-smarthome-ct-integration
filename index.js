@@ -8,6 +8,7 @@ const { State } = require("./churchtools/state.class");
 const { sendRequest } = require("./examples/google-assistant");
 const { EventTemperatureMapper } = require("./churchtools/event-temperature.mapper");
 const CronJob = require('cron').CronJob;
+const { thermostatHeartbeat } = require('./thermostat_hartbeat');
 
 require('dotenv').config();
 
@@ -24,6 +25,8 @@ run();
  */
 async function run() {
     console.log("[CRON] Executing");
+
+    thermostatHeartbeat();
 
     state = new State();
     const events = await getEvents();

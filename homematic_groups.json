@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "id": "ea032b00-75c4-4505-83bc-3d10bab34933",
+      "name": "Godi-Saal",
+      "type": "wallthermostat"
+    },
+    {
+      "id": "df6a2bda-d2e8-4b83-aa9d-4f07fd7a1e91",
+      "name": "Kleinkindbereich",
+      "type": "radiatorthermostat"
+    },
+    {
+      "id": "bc32b157-a6eb-413d-abd4-fe0cb867f330",
+      "name": "Eingangsbereich",
+      "type": "radiatorthermostat"
+    },
+    {
+      "id": "93e61e41-d177-4c94-9393-666152dba85f",
+      "name": "Seitenbereich",
+      "type": "wallthermostat"
+    },
+    {
+      "id": "e5afe1c4-8da3-4b86-b32e-6e1e0e06ba26",
+      "name": "Foyer",
+      "type": "radiatorthermostat"
+    },
+    {
+      "id": "a04a824e-b5ae-4736-b1d8-55e9095c5d41",
+      "name": "Jugendraum EG",
+      "type": "wallthermostat"
+    },
+    {
+      "id": "372b1b15-42c1-4882-a36b-37b579e6abde",
+      "name": "Jugendraum 2. OG",
+      "type": "wallthermostat"
+    }
+  ]
+}

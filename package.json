@@ -4,7 +4,6 @@
   "description": "node.js port of the 3rd party Google Assistant SDK",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
   "repository": {
@@ -19,10 +18,12 @@
   "homepage": "https://github.com/sebamomann/cghh-smarthome-ct-integration",
   "dependencies": {
     "@grpc/grpc-js": "^1.3.7",
+    "@influxdata/influxdb-client": "^1.20.0",
     "axios": "^0.24.0",
     "cron": "^1.8.2",
     "dotenv": "^10.0.0",
     "google-auth-library": "^7.0.4",
+    "influx": "^5.9.2",
     "mkdirp": "^1.0.4",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",
