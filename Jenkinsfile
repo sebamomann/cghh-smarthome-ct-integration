@@ -68,7 +68,7 @@ pipeline {
                         } catch (err) {
                             echo "cant remove container - it does not exist"
                         }
-                        sh "docker run --name ${name} -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/.env:/usr/src/app/.env -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/secrets.json:/usr/src/app/secrets.json -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/tokens.json:/usr/src/app/tokens.json -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/state.json:/usr/src/app/churchtools/state.json -d ${image_name}"
+                        sh "docker run --name ${name} -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/.env:/usr/src/app/.env -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/secrets.json:/usr/src/app/secrets.json -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/tokens.json:/usr/src/app/tokens.json -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/state.json:/usr/src/app/churchtools/state.json --network=cghh-smarthome -d ${image_name}"
                     }
                 }
             }
