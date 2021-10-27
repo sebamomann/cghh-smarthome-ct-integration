@@ -3,6 +3,8 @@
 require('dotenv').config();
 const axios = require('axios');
 
+var cookietoken = "";
+
 async function getEvents() {
     await loginForSessionRevalidation();
 
@@ -21,7 +23,7 @@ async function getEvents() {
             "headers": {
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
-                "cookie": "ChurchTools_ct_heidelsheim=blbqhuk20jv4k3k11p1jkb408u"
+                "cookie": "ChurchTools_ct_heidelsheim=" + cookietoken
             }
         });
 
@@ -38,7 +40,11 @@ async function loginForSessionRevalidation() {
         const response = await axios.post("https://heidelsheim.church.tools/api/login", {
             "username": process.env.CT_USERNAME,
             "password": process.env.CT_PASSWORD
+        }, {
+            withCredentials: true
         });
+
+        cookietoken = response.headers["set-cookie"][0].split(";")[0].split("=")[1];
 
         if (response.data.data.status !== "success") {
             console.log("Login Error");
