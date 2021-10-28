@@ -157,6 +157,4 @@ function setLastSent(data) {
     fs.writeFileSync("./last_sent.json", jsonString, 'utf8');
 }
 
-startEventListener();
-
 module.exports = { startEventListener };
