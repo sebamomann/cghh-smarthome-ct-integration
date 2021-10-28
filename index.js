@@ -26,7 +26,7 @@ run();
 async function run() {
     console.log("[CRON] Executing");
 
-    thermostatHeartbeat();
+    // thermostatHeartbeat();
 
     state = new State();
     const events = await getEvents();
