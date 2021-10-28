@@ -45,7 +45,7 @@ class WSConnection {
             this.clearPingInterval();
 
             if (!this.wsClosed) {
-                this.resetPingInterval(listener);
+                this.resetPingInterval(callback);
             }
         });
 
@@ -55,7 +55,7 @@ class WSConnection {
             this.clearPingInterval();
 
             if (!this.wsClosed) {
-                this.resetPingInterval(listener);
+                this.resetPingInterval(callback);
             }
         });
 
@@ -64,7 +64,7 @@ class WSConnection {
 
             this.clearPingInterval();
             if (!this.wsClosed) {
-                this.resetPingInterval(listener);
+                this.resetPingInterval(callback);
             }
         });
     };
@@ -81,11 +81,11 @@ class WSConnection {
         }
     };
 
-    resetReconnectInterval = (listener) => {
+    resetReconnectInterval = (callback) => {
         this.clearWsReconnectInterval();
 
         this.wsReconnectIntervalRef = setInterval(() => {
-            this.connectWs(listener);
+            this.connectWs(callback);
         }, this.wsReconnectIntervalMillis);
     };
 
