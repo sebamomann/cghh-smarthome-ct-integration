@@ -42,7 +42,7 @@ class WSConnection {
         this.ws.on('close', () => {
             console.log('[WS] Disconnected');
 
-            clearPinInterval();
+            this.clearPingInterval();
 
             if (!this.wsClosed) {
                 this.resetPingInterval(listener);
@@ -55,7 +55,7 @@ class WSConnection {
             this.clearPingInterval();
 
             if (!this.wsClosed) {
-                resetPingInterval(listener);
+                this.resetPingInterval(listener);
             }
         });
 
