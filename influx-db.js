@@ -63,6 +63,35 @@ class InfluxDBManager {
                 console.log('\\nFinished ERROR');
             });
     }
+
+    async sendGenericInformation(data) {
+        const writeApi = this.influx.getWriteApi(this.org, this.bucket);
+
+        writeApi.useDefaultTags({});
+
+        const point = new Point(data.label);
+
+        const dataValues = data.values;
+        const dataValueKeys = Object.keys(dataValues);
+
+        dataValueKeys
+            .forEach(
+                dataValueKey => {
+                    point.floatField(dataValueKey, dataValues[dataValueKey]);
+                }
+            );
+
+        writeApi.writePoint(point);
+
+        writeApi
+            .close()
+            .then(() => {
+            })
+            .catch(e => {
+                console.error(e);
+                console.log('\\nFinished ERROR');
+            });
+    }
 }
 
 module.exports = { InfluxDBManager };
