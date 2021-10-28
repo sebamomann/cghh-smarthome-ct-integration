@@ -22,6 +22,7 @@ const job_hb = new CronJob(process.env.CRON_DEFINITION_HB, () => thermostatHeart
 job_hb.start();
 
 run();
+thermostatHeartbeat();
 
 /**
  * Initialize run for heating adjustment
