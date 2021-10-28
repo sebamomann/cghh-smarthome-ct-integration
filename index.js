@@ -18,6 +18,9 @@ const cronInterval = 5; // minutes
 const job = new CronJob(process.env.CRON_DEFINITION, () => run());
 job.start();
 
+const job_hb = new CronJob(process.env.CRON_DEFINITION_HB, () => thermostatHeartbeat());
+job_hb.start();
+
 run();
 
 /**
