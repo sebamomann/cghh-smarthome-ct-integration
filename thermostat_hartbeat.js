@@ -7,6 +7,8 @@ const restApi = new HomematicApi();
 const influxDB = new InfluxDBManager();
 
 async function thermostatHeartbeat() {
+    console.log("[CRON] [HB] Executing");
+
     const groupsWithType = getGroupsWithTypeWallthermostat();
     const homeState = await restApi.getCurrentHomeState();
 
