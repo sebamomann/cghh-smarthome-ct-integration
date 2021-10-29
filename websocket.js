@@ -83,6 +83,10 @@ const handleDeviceChanged = (event) => {
 
                 const groupLabel = getGroupsLabelById(deviceGroupId);
 
+                // TODO 
+                // WHY IS IT UNDEFINED?
+                if (!deviceActualValveTemperature) return;
+
                 const data = {
                     label: groupLabel,
                     values: {
@@ -116,10 +120,6 @@ const handleHomeChangeEvent = (event) => {
 
     const temperature = home.weather.temperature;
     const humidity = home.weather.humidity;
-
-    // TODO 
-    // WHY IS IT UNDEFINED?
-    if (!temperature) return;
 
     const data = {
         label: "Wetter",
