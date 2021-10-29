@@ -1,178 +1,175 @@
-const { InfluxDBManager } = require("./influx-db");
-const { WSConnection: WebsocketManager } = require("./websocket-connection");
-const fs = require('fs');
+const { WebsocketManager } = require("./websocket-manager");
 
-const influxDB = new InfluxDBManager();
-const websocketManager = new WebsocketManager();
+const { parseHeatingGroupDataIntoInfluxDataObject, parseHeatingThermostatChannelDataIntoInfluxDataObject, parseHomeWeatherDataIntoInfluxDataObject } = require("./homematic-influx.mapper");
+
+const { Group } = require("./homematic/group");
+const { Device } = require("./homematic/device");
+
+const { LastSentDataManager } = require("./last-sent-data-manager");
+
+const { HeatingGroupDataSender } = require("./heating-group-data-sender");
+const { WeatherDataSender } = require("./weather-data-sender");
+
+require("dotenv").config();
 
 const startEventListener = () => {
+    const websocketManager = new WebsocketManager(process.env.HOMEMATIC_WS_URL);
+    const headers = {
+        'AUTHTOKEN': process.env.HOMEMATIC_API_AUTHTOKEN,
+        'CLIENTAUTH': process.env.HOMEMATIC_API_CLIENTAUTH,
+    };
+    websocketManager.setHeaders(headers);
     websocketManager.connect(callback);
 };
 
+/**
+ * Callback function that gets executed when the websocket receives a new event
+ * 
+ * @param {*} data 
+ */
 const callback = (data) => {
-    const bufferdata = data.toString("utf8");
-    const json = JSON.parse(bufferdata);
+    const rawBuffer = data.toString("utf8");
+    const jsonData = JSON.parse(rawBuffer);
 
-    const events = json.events;
-
+    const events = jsonData.events; // note: element is no array but an object with id's as identifier for each event 
     const eventIds = Object.keys(events);
 
     eventIds
         .forEach(eventId => {
             const event = events[eventId];
-
-            if (event.pushEventType === "GROUP_CHANGED") {
-                handleGroupChangedEvent(event);
-            } else if (event.pushEventType === "DEVICE_CHANGED") {
-                handleDeviceChanged(event);
-            } else if (event.pushEventType === "HOME_CHANGED") {
-                handleHomeChangeEvent(event);
-            }
+            handleElement(event);
         });
 };
 
+/**
+ * Handle event data send over websocket connection
+ * 
+ * @param {*} event 
+ */
+const handleElement = (event) => {
+    if (event.pushEventType === "GROUP_CHANGED") {
+        handleGroupChangedEvent(event);
+    } else if (event.pushEventType === "DEVICE_CHANGED") {
+        handleDeviceChanged(event);
+    } else if (event.pushEventType === "HOME_CHANGED") {
+        handleHomeChangeEvent(event);
+    }
+};
+
+/**
+ * Parse update group data object.
+ * Determine if is heating group.
+ * Determine if values did change.
+ * 
+ * Initialize data send
+ * 
+ * @param {*} event 
+ */
 const handleGroupChangedEvent = (event) => {
-    if (event.group?.type === "HEATING") {
-        const groupLabel = event.group.label;
-        const groupSetPointTemperature = event.group.setPointTemperature;
-        const groupActualTemperature = event.group.actualTemperature;
-        const groupHumidity = event.group.humidity;
+    const rawGroup = event.group;
 
-        if (!groupActualTemperature) return; // e.g. Eingangsbereich is null due to not being wallthermostat
+    if (!rawGroup) return;
 
-        const data = {
-            label: groupLabel,
-            values: {
-                temperature: groupActualTemperature,
-                setTemperature: groupSetPointTemperature,
-                humidity: groupHumidity,
-            }
-        };
+    const group = new Group(rawGroup);
 
-        const lastSent = getLastSentDataForGroup(groupLabel);
+    if (!group.isHeatingGroup()) return;
+    if (!group.containsThermostat()) return;
 
-        if (JSON.stringify(lastSent) === JSON.stringify(data)) {
-            console.log("SKIP");
-            return;
-        }
+    const data = parseHeatingGroupDataIntoInfluxDataObject(group);
 
-        // check and resent value set with last send setTemperature so there is a hard cut in the data for the field
-        if (lastSent && lastSent.values.setTemperature !== data.values.setTemperature) {
-            const resend = JSON.parse(JSON.stringify(data));
-            resend.values.setTemperature = lastSent.values.setTemperature;
-
-            console.log("RESEND");
-            influxDB.sendGenericInformation(resend);
-        }
-
-        influxDB.sendGenericInformation(data);
-
-        setLastSent(data);
-
-        console.log("[Event] " + groupLabel + " Set: " + groupSetPointTemperature + " Current: " + groupActualTemperature);
-    }
+    sendGroupData(data);
 };
 
+/**
+ * Parse update device data object.
+ * Determine if is heating thermostat.
+ * 
+ * Initialize data send
+ *
+ * @param {*} event
+ */
 const handleDeviceChanged = (event) => {
-    if (event.device?.type === "HEATING_THERMOSTAT") {
-        const functionalChannels = event.device.functionalChannels;
-        const functionalChannelKeys = Object.keys(functionalChannels);
+    const rawDevice = event.device;
 
-        functionalChannelKeys
-            .forEach(functionalChannelKey => {
-                const channel = functionalChannels[functionalChannelKey];
+    if (!rawDevice) return;
 
-                const deviceLabel = event.device.label;
-                const deviceSetPointTemperature = channel.setPointTemperature;
-                const deviceActualValveTemperature = channel.valveActualTemperature;
-                const deviceGroupId = channel.groups[0];
+    const device = new Device(rawDevice);
 
-                const groupLabel = getGroupsLabelById(deviceGroupId);
+    if (!device.isHeatingThermostat()) return;
 
-                // TODO 
-                // WHY IS IT UNDEFINED?
-                if (!deviceActualValveTemperature || !deviceSetPointTemperature || !groupLabel) return;
-
-                const data = {
-                    label: groupLabel,
-                    values: {
-                        temperature: deviceActualValveTemperature,
-                        setTemperature: deviceSetPointTemperature
-                    }
-                };
-
-                const lastSent = getLastSentDataForGroup(groupLabel);
-
-                if (JSON.stringify(lastSent) === JSON.stringify(data)) {
-                    console.log("SKIP");
-                    return;
-                }
-
-                // check and resent value set with last send setTemperature so there is a hard cut in the data for the field
-                if (lastSent && lastSent.values.setTemperature !== data.values.setTemperature) {
-                    const resend = JSON.parse(JSON.stringify(data));
-                    resend.values.setTemperature = lastSent.values.setTemperature;
-
-                    console.log("RESEND");
-                    influxDB.sendGenericInformation(resend);
-                }
-
-                influxDB.sendGenericInformation(data);
-
-                setLastSent(data);
-
-                console.log("[EVENT] [*] " + deviceLabel + " Set: " + deviceSetPointTemperature + " Current: " + deviceActualValveTemperature + " GRPID: " + deviceGroupId);
-            });
-
-    }
+    const functionChannel = device.getRelevantFunctionalChannel();
+    const data = parseHeatingThermostatChannelDataIntoInfluxDataObject(functionChannel);
+    sendGroupData(data);
 };
 
+/**
+ * Parse updated home state.
+ * Determine if weather information is present.
+ *
+ * Initialize data send
+ * 
+ * @param {*} event 
+ */
 const handleHomeChangeEvent = (event) => {
-    const home = event.home;
+    const raw_weather = event.home.weather;
 
-    const temperature = home.weather.temperature;
-    const humidity = home.weather.humidity;
+    if (!raw_weather) return;
 
-    const data = {
-        label: "Wetter",
-        values: {
-            temperature: temperature,
-            humidity: humidity
-        }
-    };
+    const data = parseHomeWeatherDataIntoInfluxDataObject(raw_weather);
 
-    influxDB.sendGenericInformation(data);
-
-    console.log("[Event] Wetter " + temperature + " " + humidity);
+    sendWeatherData(data);
 };
 
-function getGroupsLabelById(id) {
-    const data = fs.readFileSync("./homematic_groups.json", 'utf8');
-    const json_data = JSON.parse(data);
+// TODO
+// SEND TO OWN BUCKET
+/**
+ * Check if group data changed.
+ * Initialize data send.
+ * Log event.
+ * 
+ * @param {*} data 
+ */
+const sendGroupData = (data) => {
+    const lastSentDataManager = new LastSentDataManager(data);
 
-    return json_data.groups.find(element => element.id === id)?.name;
-}
+    if (lastSentDataManager.lastSentDataIsStillCorrect()) return;
 
-function getLastSentJsonObject() {
-    const data = fs.readFileSync("./last_sent.json", 'utf8');
+    const dataSender = new HeatingGroupDataSender();
+    dataSender.sendData(lastSentDataManager.lastData, data);
 
-    return JSON.parse(data);
-}
+    lastSentDataManager.updateLastSent();
 
-function getLastSentDataForGroup(label) {
-    const json_data = getLastSentJsonObject();
-    return json_data[label];
-}
+    const lsdm = lastSentDataManager.lastData;
 
-function setLastSent(data) {
-    const label = data.label;
+    console.log("[Event] [GROUP UPDATE] [FROM] " + lsdm.label + " Set: " + lsdm.values.setTemperature.toFixed(1) + " Current: " + lsdm.values.temperature.toFixed(1) + " Hum: " + lsdm.values.humidity?.toFixed(1));
+    console.log("[Event] [GROUP UPDATE] [TOOO] " + data.label + " Set: " + data.values.setTemperature.toFixed(1) + " Current: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity?.toFixed(1));
+    console.log("-----");
+};
 
-    const json_data = getLastSentJsonObject();
-    json_data[label] = data;
+// TODO
+// SEND TO OWN BUCKET
+/**
+ * Check if weather data changed.
+ * Initialize data send.
+ * Log event.
+ *
+ * @param {*} data
+ */
+const sendWeatherData = (data) => {
+    const lastSentDataManager = new LastSentDataManager(data);
 
-    const jsonString = JSON.stringify(json_data, null, 2);
+    if (lastSentDataManager.lastSentDataIsStillCorrect()) return;
 
-    fs.writeFileSync("./last_sent.json", jsonString, 'utf8');
-}
+    const dataSender = new WeatherDataSender();
+    dataSender.sendData(lastSentDataManager.lastData, data);
+
+    lastSentDataManager.updateLastSent();
+
+    const lsdm = lastSentDataManager.lastData;
+
+    console.log("[Event] [WEATHER UPDATE] [FROM] Temp: " + lsdm.values.temperature.toFixed(1) + " Hum: " + lsdm.values.humidity.toFixed(1));
+    console.log("[Event] [WEATHER UPDATE] [TOOO] Temp: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity.toFixed(1));
+    console.log("-----");
+};
 
 module.exports = { startEventListener };

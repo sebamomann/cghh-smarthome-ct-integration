@@ -2,33 +2,33 @@
   "Jugendraum 2. OG": {
     "label": "Jugendraum 2. OG",
     "values": {
-      "temperature": 19.5,
-      "setTemperature": 22,
-      "humidity": 54
+      "temperature": 19.1,
+      "setTemperature": 16,
+      "humidity": 53
     }
   },
   "Jugendraum EG": {
     "label": "Jugendraum EG",
     "values": {
-      "temperature": 19.1,
-      "setTemperature": 22,
+      "temperature": 19.4,
+      "setTemperature": 16,
       "humidity": 57
     }
   },
   "Godi-Saal": {
     "label": "Godi-Saal",
     "values": {
-      "temperature": 17.6,
+      "temperature": 17.4,
       "setTemperature": 16,
-      "humidity": 52
+      "humidity": 51
     }
   },
   "Seitenbereich": {
     "label": "Seitenbereich",
     "values": {
-      "temperature": 17.5,
+      "temperature": 17.3,
       "setTemperature": 16,
-      "humidity": 52
+      "humidity": 51
     }
   },
   "undefined": {
@@ -40,22 +40,29 @@
   "Eingangsbereich": {
     "label": "Eingangsbereich",
     "values": {
-      "temperature": 15.7,
+      "temperature": 15.5,
       "setTemperature": 15
     }
   },
   "Kleinkindbereich": {
     "label": "Kleinkindbereich",
     "values": {
-      "temperature": 19.1,
+      "temperature": 18.2,
       "setTemperature": 16
     }
   },
   "Foyer": {
     "label": "Foyer",
     "values": {
-      "temperature": 17.8,
+      "temperature": 17.4,
       "setTemperature": 16
+    }
+  },
+  "Wetter": {
+    "label": "Wetter",
+    "values": {
+      "temperature": 8.6,
+      "humidity": 67
     }
   }
 }

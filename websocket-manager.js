@@ -1,10 +1,6 @@
 const WebSocket = require('ws');
 
-require("dotenv").config();
-
 class WebsocketManager {
-    api;
-
     websocket;
     pingIntervallMilliseconds = 10 * 1000; // 5s
     reconnectIntervallMillis = 10 * 1000; // 10s
@@ -12,7 +8,16 @@ class WebsocketManager {
     pingIntervalRef;
     reconnectIntervalRef;
 
-    constructor() {
+    // connection information
+    url;
+    headers;
+
+    constructor(url) {
+        this.url = url;
+    }
+
+    setHeaders(headers) {
+        this.headers = headers;
     }
 
     /**
@@ -22,11 +27,8 @@ class WebsocketManager {
      * @param {*} callback  Callback to execute on message event
      */
     connect = (callback) => {
-        this.websocket = new WebSocket(process.env.HOMEMATIC_WS_URL, {
-            headers: {
-                'AUTHTOKEN': process.env.HOMEMATIC_API_AUTHTOKEN,
-                'CLIENTAUTH': process.env.HOMEMATIC_API_CLIENTAUTH,
-            },
+        this.websocket = new WebSocket(this.url, {
+            headers: this.headers
         });
 
         this.websocket.on('message', callback);

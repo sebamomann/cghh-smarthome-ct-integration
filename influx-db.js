@@ -65,9 +65,6 @@ class InfluxDBManager {
     }
 
     async sendGenericInformation(data) {
-        console.log("Sending");
-        console.log({ ...data });
-
         const writeApi = this.influx.getWriteApi(this.org, this.bucket);
 
         writeApi.useDefaultTags({});
