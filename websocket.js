@@ -117,6 +117,10 @@ const handleHomeChangeEvent = (event) => {
     const temperature = home.weather.temperature;
     const humidity = home.weather.humidity;
 
+    // TODO 
+    // WHY IS IT UNDEFINED?
+    if (!temperature) return;
+
     const data = {
         label: "Wetter",
         values: {
