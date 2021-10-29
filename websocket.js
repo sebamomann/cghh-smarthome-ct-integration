@@ -51,11 +51,17 @@ const handleGroupChangedEvent = (event) => {
 
         const lastSent = getLastSentDataForGroup(groupLabel);
 
+        if (JSON.stringify(lastSent) === JSON.stringify(data)) {
+            console.log("SKIP");
+            return;
+        }
+
         // check and resent value set with last send setTemperature so there is a hard cut in the data for the field
         if (lastSent && lastSent.values.setTemperature !== data.values.setTemperature) {
-            const resend = { ...data };
+            const resend = JSON.parse(JSON.stringify(data));
             resend.values.setTemperature = lastSent.values.setTemperature;
 
+            console.log("RESEND");
             influxDB.sendGenericInformation(resend);
         }
 
@@ -85,7 +91,7 @@ const handleDeviceChanged = (event) => {
 
                 // TODO 
                 // WHY IS IT UNDEFINED?
-                if (!deviceActualValveTemperature || !deviceSetPointTemperature) return;
+                if (!deviceActualValveTemperature || !deviceSetPointTemperature || !groupLabel) return;
 
                 const data = {
                     label: groupLabel,
@@ -97,11 +103,17 @@ const handleDeviceChanged = (event) => {
 
                 const lastSent = getLastSentDataForGroup(groupLabel);
 
+                if (JSON.stringify(lastSent) === JSON.stringify(data)) {
+                    console.log("SKIP");
+                    return;
+                }
+
                 // check and resent value set with last send setTemperature so there is a hard cut in the data for the field
                 if (lastSent && lastSent.values.setTemperature !== data.values.setTemperature) {
-                    const resend = { ...data };
+                    const resend = JSON.parse(JSON.stringify(data));
                     resend.values.setTemperature = lastSent.values.setTemperature;
 
+                    console.log("RESEND");
                     influxDB.sendGenericInformation(resend);
                 }
 
@@ -138,7 +150,7 @@ function getGroupsLabelById(id) {
     const data = fs.readFileSync("./homematic_groups.json", 'utf8');
     const json_data = JSON.parse(data);
 
-    return json_data.groups.filter(element => element.id === id).label;
+    return json_data.groups.find(element => element.id === id)?.name;
 }
 
 function getLastSentJsonObject() {
