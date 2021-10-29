@@ -85,7 +85,7 @@ const handleDeviceChanged = (event) => {
 
                 // TODO 
                 // WHY IS IT UNDEFINED?
-                if (!deviceActualValveTemperature) return;
+                if (!deviceActualValveTemperature || !deviceSetPointTemperature) return;
 
                 const data = {
                     label: groupLabel,
