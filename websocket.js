@@ -38,6 +38,8 @@ const handleGroupChangedEvent = (event) => {
         const groupActualTemperature = event.group.actualTemperature;
         const groupHumidity = event.group.humidity;
 
+        if (!groupActualTemperature) return; // e.g. Eingangsbereich is null due to not being wallthermostat
+
         const data = {
             label: groupLabel,
             values: {
@@ -77,7 +79,7 @@ const handleDeviceChanged = (event) => {
                 const deviceLabel = event.device.label;
                 const deviceSetPointTemperature = channel.setPointTemperature;
                 const deviceActualValveTemperature = channel.valveActualTemperature;
-                const deviceGroupId = element.groups[0];
+                const deviceGroupId = channel.groups[0];
 
                 const groupLabel = getGroupsLabelById(deviceGroupId);
 
