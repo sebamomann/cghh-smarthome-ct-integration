@@ -3,7 +3,6 @@ const { Point } = require('@influxdata/influxdb-client');
 
 class InfluxDBManager {
     org = process.env.INFLUX_ORG;
-    bucket = process.env.INFLUX_BUCKET;
 
     influx;
 
@@ -19,7 +18,7 @@ class InfluxDBManager {
         const currentHumidity = group.humidity;
         const setTemperature = group.setPointTemperature;
 
-        const writeApi = this.influx.getWriteApi(this.org, this.bucket);
+        const writeApi = this.influx.getWriteApi(this.org, "any");
 
         writeApi.useDefaultTags({});
 
@@ -44,7 +43,7 @@ class InfluxDBManager {
         const currentTemp = weather.temperature;
         const currentHumidity = weather.humidity;
 
-        const writeApi = this.influx.getWriteApi(this.org, this.bucket);
+        const writeApi = this.influx.getWriteApi(this.org, "any");
 
         writeApi.useDefaultTags({});
 
@@ -64,10 +63,10 @@ class InfluxDBManager {
             });
     }
 
-    async sendGenericInformation(data) {
-        const writeApi = this.influx.getWriteApi(this.org, this.bucket);
+    async sendGenericInformation(data, bucket) {
+        const writeApi = this.influx.getWriteApi(this.org, bucket);
 
-        writeApi.useDefaultTags({});
+        writeApi.useDefaultTags(data.tags ? data.tags : {});
 
         const point = new Point(data.label);
 
@@ -77,7 +76,10 @@ class InfluxDBManager {
         dataValueKeys
             .forEach(
                 dataValueKey => {
-                    point.floatField(dataValueKey, dataValues[dataValueKey]);
+                    const value = dataValues[dataValueKey];
+                    if (value) {
+                        point.floatField(dataValueKey, dataValues[dataValueKey]);
+                    }
                 }
             );
 

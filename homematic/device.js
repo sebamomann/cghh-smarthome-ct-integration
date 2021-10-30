@@ -13,21 +13,22 @@ class Device {
         return this.data.type === "HEATING_THERMOSTAT";
     }
 
-    getRelevantFunctionalChannel() {
+    getRelevantFunctionalChannels() {
         const functionalChannels = this.data.functionalChannels;
         const functionalChannelKeys = Object.keys(functionalChannels);
+
+        var channels = [];
 
         for (let index = 0; index < functionalChannelKeys.length; index++) {
             const key = functionalChannelKeys[index];
             const channel = functionalChannels[key];
 
-            const deviceSetPointTemperature = channel.setPointTemperature;
-            const deviceActualValveTemperature = channel.valveActualTemperature;
+            if (channel.functionalChannelType !== "HEATING_THERMOSTAT_CHANNEL") continue;
 
-            if (!deviceActualValveTemperature || !deviceSetPointTemperature) continue;
-
-            return channel;
+            channels.push(channel);
         };
+
+        return channels;
     }
 }
 

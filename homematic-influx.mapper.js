@@ -23,31 +23,42 @@ const parseHeatingGroupDataIntoInfluxDataObject = (group) => {
  * @param {*} group 
  * @returns 
  */
-const parseHeatingThermostatChannelDataIntoInfluxDataObject = (functionChannel) => {
-    const deviceGroupId = functionChannel.groups[0];
-    const groupLabel = getGroupsLabelById(deviceGroupId);
-
-    const deviceSetPointTemperature = functionChannel.setPointTemperature;
-    const deviceActualValveTemperature = functionChannel.valveActualTemperature;
+const parseHeatingThermostatChannelDataIntoInfluxDataObject = (device, channel) => {
+    const deviceSetPointTemperature = channel.setPointTemperature;
+    const deviceActualValveTemperature = channel.valveActualTemperature;
 
     return {
-        label: groupLabel,
+        label: device.data.label,
         values: {
             temperature: deviceActualValveTemperature,
             setTemperature: deviceSetPointTemperature
+        },
+        tags: {
+            channel: channel.index
         }
     };
 };
 
-const parseHomeWeatherDataIntoInfluxDataObject = (weather) => {
-    const temperature = weather.temperature;
-    const humidity = weather.humidity;
+const parseHomeWeatherDataIntoInfluxDataObject = (home) => {
+    const temperature = home.weather.temperature;
+    const minTemperature = home.weather.minTemperature;
+    const maxTemperature = home.weather.maxTemperature;
+    const windSpeed = home.weather.windSpeed;
+    const humidity = home.weather.humidity;
+    const location = home.location.city.split(",")[0];
 
     return {
-        label: "Wetter",
+        label: location,
         values: {
             temperature: temperature,
-            humidity: humidity
+            humidity: humidity,
+            minTemperature,
+            maxTemperature,
+            windSpeed,
+        },
+        tags: {
+            weatherDayTime: home.weather.weatherDayTime,
+            weatherConditiion: home.weather.weatherCondition
         }
     };
 };

@@ -9,6 +9,7 @@ const { LastSentDataManager } = require("./last-sent-data-manager");
 
 const { HeatingGroupDataSender } = require("./heating-group-data-sender");
 const { WeatherDataSender } = require("./weather-data-sender");
+const { HeatingThermostatDataSender } = require("./heating-thermostat-data-sender");
 
 require("dotenv").config();
 
@@ -73,7 +74,6 @@ const handleGroupChangedEvent = (event) => {
     const group = new Group(rawGroup);
 
     if (!group.isHeatingGroup()) return;
-    if (!group.containsThermostat()) return;
 
     const data = parseHeatingGroupDataIntoInfluxDataObject(group);
 
@@ -97,9 +97,12 @@ const handleDeviceChanged = (event) => {
 
     if (!device.isHeatingThermostat()) return;
 
-    const functionChannel = device.getRelevantFunctionalChannel();
-    const data = parseHeatingThermostatChannelDataIntoInfluxDataObject(functionChannel);
-    sendGroupData(data);
+    const heatingThermostatChannels = device.getRelevantFunctionalChannels();
+
+    heatingThermostatChannels.forEach(channel => {
+        const data = parseHeatingThermostatChannelDataIntoInfluxDataObject(device, channel);
+        sendDeviceData(data);
+    });
 };
 
 /**
@@ -111,17 +114,14 @@ const handleDeviceChanged = (event) => {
  * @param {*} event 
  */
 const handleHomeChangeEvent = (event) => {
-    const raw_weather = event.home.weather;
+    const raw_home = event.home;
 
-    if (!raw_weather) return;
+    if (!raw_home) return;
 
-    const data = parseHomeWeatherDataIntoInfluxDataObject(raw_weather);
-
+    const data = parseHomeWeatherDataIntoInfluxDataObject(raw_home);
     sendWeatherData(data);
 };
 
-// TODO
-// SEND TO OWN BUCKET
 /**
  * Check if group data changed.
  * Initialize data send.
@@ -141,13 +141,28 @@ const sendGroupData = (data) => {
 
     const lsdm = lastSentDataManager.lastData;
 
-    console.log("[Event] [GROUP UPDATE] [FROM] " + lsdm.label + " Set: " + lsdm.values.setTemperature.toFixed(1) + " Current: " + lsdm.values.temperature.toFixed(1) + " Hum: " + lsdm.values.humidity?.toFixed(1));
-    console.log("[Event] [GROUP UPDATE] [TOOO] " + data.label + " Set: " + data.values.setTemperature.toFixed(1) + " Current: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity?.toFixed(1));
+    console.log("[Event] [GROUP UPDATE] [FROM] " + lsdm.label + " Set: " + lsdm.values.setTemperature.toFixed(1) + " Current: " + lsdm.values.temperature?.toFixed(1) + " Hum: " + lsdm.values.humidity?.toFixed(1));
+    console.log("[Event] [GROUP UPDATE] [TOOO] " + data.label + " Set: " + data.values.setTemperature.toFixed(1) + " Current: " + data.values.temperature?.toFixed(1) + " Hum: " + data.values.humidity?.toFixed(1));
     console.log("-----");
 };
 
-// TODO
-// SEND TO OWN BUCKET
+const sendDeviceData = (data) => {
+    const lastSentDataManager = new LastSentDataManager(data);
+
+    if (lastSentDataManager.lastSentDataIsStillCorrect()) return;
+
+    const dataSender = new HeatingThermostatDataSender();
+    dataSender.sendData(lastSentDataManager.lastData, data);
+
+    lastSentDataManager.updateLastSent();
+
+    const lsdm = lastSentDataManager.lastData;
+
+    console.log("[Event] [DEVICE UPDATE] [FROM] " + lsdm.label + " Set: " + lsdm.values.setTemperature.toFixed(1) + " Current: " + lsdm.values.temperature.toFixed(1) + " Hum: " + lsdm.values.humidity?.toFixed(1));
+    console.log("[Event] [DEVICE UPDATE] [TOOO] " + data.label + " Set: " + data.values.setTemperature.toFixed(1) + " Current: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity?.toFixed(1));
+    console.log("-----");
+};
+
 /**
  * Check if weather data changed.
  * Initialize data send.
@@ -171,5 +186,7 @@ const sendWeatherData = (data) => {
     console.log("[Event] [WEATHER UPDATE] [TOOO] Temp: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity.toFixed(1));
     console.log("-----");
 };
+
+startEventListener();
 
 module.exports = { startEventListener };

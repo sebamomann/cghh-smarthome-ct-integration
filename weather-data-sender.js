@@ -15,7 +15,7 @@ class WeatherDataSender {
      * @param {*} newData 
      */
     sendData(lastData, newData) {
-        this.influxDB.sendGenericInformation(newData);
+        this.influxDB.sendGenericInformation(newData, "weather");
     }
 }
 

@@ -1,6 +1,11 @@
 const { InfluxDBManager } = require("./influx-db");
 
-class HeatingGroupDataSender {
+/**
+ * TODO
+ * Zusammenfassen? 
+ * --> Vererbung?
+ */
+class HeatingThermostatDataSender {
 
     influxDb;
 
@@ -22,10 +27,9 @@ class HeatingGroupDataSender {
 
         if (isSetTemperatureChange) {
             const resendData = this.constructResendDataElement(lastData, newData);
-            this.influxDB.sendGenericInformation(resendData, "group-heating");
+            this.influxDB.sendGenericInformation(resendData, "device-heating-thermostat");
         }
 
-        this.influxDB.sendGenericInformation(newData, "group-heating");
     }
 
     /**
@@ -43,4 +47,4 @@ class HeatingGroupDataSender {
     }
 }
 
-module.exports = { HeatingGroupDataSender };
+module.exports = { HeatingThermostatDataSender };
