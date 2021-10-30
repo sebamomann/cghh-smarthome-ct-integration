@@ -3,70 +3,74 @@
     {
       "id": "3",
       "name": "Godi-Saal",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
-      "homematicName": "Godi-Saal",
-      "desiredTemperature": 21,
+      "heatingOffsetIdle": 0,
+      "desiredTemperature": 20,
       "desiredTemperatureIdle": 16,
-      "currentlyHeating": false
+      "homematicName": "Godi-Saal",
+      "heatingRate": 60,
+      "spinupTime": 20
     },
     {
       "id": "8",
       "name": "Jugendraum EG",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
+      "heatingOffsetIdle": 0,
       "homematicName": "Jugendraum EG",
-      "desiredTemperature": 21,
+      "desiredTemperature": 20,
       "desiredTemperatureIdle": 16,
-      "currentlyHeating": false
+      "heatingRate": 60,
+      "spinupTime": 20
     },
     {
       "id": "9",
       "name": "Jugendraum 2. OG",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
+      "heatingOffsetIdle": 0,
       "homematicName": "Jugendraum 2. OG",
-      "desiredTemperature": 21,
-      "desiredTemperatureIdle": 16
+      "desiredTemperature": 20,
+      "desiredTemperatureIdle": 16,
+      "heatingRate": 60,
+      "spinupTime": 20
     },
     {
       "id": "5",
       "name": "Seitenbereich",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
+      "heatingOffsetIdle": 0,
       "homematicName": "Seitenbereich",
-      "desiredTemperature": 21,
-      "desiredTemperatureIdle": 16
+      "desiredTemperature": 20,
+      "desiredTemperatureIdle": 16,
+      "heatingRate": 60,
+      "spinupTime": 20
     },
     {
       "id": "11",
       "name": "Foyer",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
+      "heatingOffsetIdle": 0,
       "homematicName": "Foyer",
-      "desiredTemperature": 21,
-      "desiredTemperatureIdle": 16
+      "desiredTemperature": 20,
+      "desiredTemperatureIdle": 16,
+      "heatingRate": 60,
+      "spinupTime": 20
     },
     {
       "id": "12",
       "name": "Kleinkindbereich",
-      "currentlyHeated": false,
       "heatingForEvent": null,
       "heatingOffset": 60,
-      "heatingOffsetIdle": 60,
+      "heatingOffsetIdle": 0,
       "homematicName": "Kleinkindbereich",
-      "desiredTemperature": 21,
-      "desiredTemperatureIdle": 16
+      "desiredTemperature": 20,
+      "desiredTemperatureIdle": 16,
+      "heatingRate": 30,
+      "spinupTime": 20
     }
   ]
 }

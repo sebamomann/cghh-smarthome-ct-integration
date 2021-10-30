@@ -16,6 +16,19 @@ class HomematicApi {
         return await this.callRest("home/getCurrentState", this.getCharacteristics());
     }
 
+    /**
+     * 
+     * @param {string} groupId 
+     * @param {number} desiredTemperature 
+     * @returns 
+     */
+    async setTemperatureForGroup(groupId, desiredTemperature) {
+        return await this.callRest("group/heating/setSetPointTemperature", {
+            "groupId": groupId,
+            "setPointTemperature": desiredTemperature
+        });
+    }
+
     async callRest(path, payload) {
         const headers = {
             "content-type": "application/json",

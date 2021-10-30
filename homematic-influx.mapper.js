@@ -63,14 +63,6 @@ const parseHomeWeatherDataIntoInfluxDataObject = (home) => {
     };
 };
 
-function getGroupsLabelById(id) {
-    const data = fs.readFileSync("./homematic_groups.json", 'utf8');
-    const json_data = JSON.parse(data);
-
-    return json_data.groups.find(element => element.id === id)?.name;
-}
-
-
 module.exports = {
     parseHeatingGroupDataIntoInfluxDataObject,
     parseHeatingThermostatChannelDataIntoInfluxDataObject,

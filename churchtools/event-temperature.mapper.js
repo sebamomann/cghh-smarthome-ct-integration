@@ -6,7 +6,7 @@ class EventTemperatureMapper {
     constructor() {
     }
 
-    static getTemperatureForEvent(eventName) {
+    static getDesiredTemperatureForEvent(eventName) {
         const data = fs.readFileSync(this.FILE_NAME, 'utf8');
         const mappings = JSON.parse(data);
 
