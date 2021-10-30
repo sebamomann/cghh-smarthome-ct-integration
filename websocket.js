@@ -187,6 +187,4 @@ const sendWeatherData = (data) => {
     console.log("-----");
 };
 
-startEventListener();
-
 module.exports = { startEventListener };
