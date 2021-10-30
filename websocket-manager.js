@@ -84,7 +84,7 @@ class WebsocketManager {
         this.clearWsReconnectInterval();
 
         this.reconnectIntervalRef = setInterval(() => {
-            this.connectWs(callback);
+            this.connect(callback);
         }, this.reconnectIntervallMillis);
     };
 
