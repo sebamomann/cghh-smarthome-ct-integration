@@ -26,10 +26,15 @@ class HeatingThermostatDataSender {
         const isSetTemperatureChange = lastData.values.setTemperature !== newData.values.setTemperature;
 
         if (isSetTemperatureChange) {
+            console.log("RESEND");
             const resendData = this.constructResendDataElement(lastData, newData);
             this.influxDB.sendGenericInformation(resendData, "device-heating-thermostat");
+            console.log(resendData);
         }
 
+        console.log("SEND");
+        console.log(newData);
+        this.influxDB.sendGenericInformation(newData, "device-heating-thermostat");
     }
 
     /**
