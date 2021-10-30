@@ -5,3 +5,4 @@ tokens.json
 churchtools/state.json
 .env
 state.json
+last_sent.json
