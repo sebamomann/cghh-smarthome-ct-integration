@@ -29,14 +29,11 @@ class InfluxDBManager {
 
         writeApi.writePoint(point);
 
-        writeApi
-            .close()
-            .then(() => {
-            })
-            .catch(e => {
-                console.error(e);
-                console.log('\\nFinished ERROR');
-            });
+        try {
+            await writeApi.close();
+        } catch (e) {
+            console.log("[INFLUX] [ERROR] " + e);
+        }
     }
 
     async sendWeatherInformation(weather) {
@@ -53,14 +50,11 @@ class InfluxDBManager {
 
         writeApi.writePoint(point);
 
-        writeApi
-            .close()
-            .then(() => {
-            })
-            .catch(e => {
-                console.error(e);
-                console.log('\\nFinished ERROR');
-            });
+        try {
+            await writeApi.close();
+        } catch (e) {
+            console.log("[INFLUX] [ERROR] " + e);
+        }
     }
 
     async sendGenericInformation(data, bucket) {
@@ -85,14 +79,11 @@ class InfluxDBManager {
 
         writeApi.writePoint(point);
 
-        writeApi
-            .close()
-            .then(() => {
-            })
-            .catch(e => {
-                console.error(e);
-                console.log('\\nFinished ERROR');
-            });
+        try {
+            await writeApi.close();
+        } catch (e) {
+            console.log("[INFLUX] [ERROR] " + e);
+        }
     }
 }
 

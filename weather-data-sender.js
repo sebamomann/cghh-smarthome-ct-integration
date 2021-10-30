@@ -14,8 +14,8 @@ class WeatherDataSender {
      * @param {*} lastData 
      * @param {*} newData 
      */
-    sendData(lastData, newData) {
-        this.influxDB.sendGenericInformation(newData, "weather");
+    async sendData(lastData, newData) {
+        await  this.influxDB.sendGenericInformation(newData, "weather");
     }
 }
 

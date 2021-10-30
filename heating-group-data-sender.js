@@ -17,20 +17,20 @@ class HeatingGroupDataSender {
      * @param {*} lastData 
      * @param {*} newData 
      */
-    sendData(lastData, newData) {
+    async sendData(lastData, newData) {
         const isSetTemperatureChange = lastData.values.setTemperature !== newData.values.setTemperature;
 
         if (isSetTemperatureChange) {
             console.log("RESEND");
             const resendData = this.constructResendDataElement(lastData, newData);
-            this.influxDB.sendGenericInformation(resendData, "group-heating");
+            await this.influxDB.sendGenericInformation(resendData, "group-heating");
             console.log(resendData);
         }
 
         console.log("SEND");
         console.log(newData);
 
-        this.influxDB.sendGenericInformation(newData, "group-heating");
+        await this.influxDB.sendGenericInformation(newData, "group-heating");
     }
 
     /**
