@@ -101,11 +101,11 @@ class EventLogger {
     static weatherUpdateEvent(currentState, updatedState) {
         const isInitialUpdate = currentState.label === "INIT";
         if (!isInitialUpdate) {
-            this.weatherUpdateEventString("FROM", currentState, currentChannel);
+            this.weatherUpdateEventString("FROM", currentState);
         }
 
         const fromTo = isInitialUpdate ? "INIT" : "TOOO";
-        this.weatherUpdateEventString(fromTo, updatedState, updatedChannel);
+        this.weatherUpdateEventString(fromTo, updatedState);
     }
 
     static weatherUpdateEventString(fromTo, state) {
