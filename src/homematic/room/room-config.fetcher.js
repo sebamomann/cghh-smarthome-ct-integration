@@ -25,7 +25,7 @@ class RoomConfigurationFetcher {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.id === roomId);
 
-        if (!roomRaw) throw new Error("Room does not exist in HMIP");
+        if (!roomRaw) throw new Error("Room does not exist in HMIP. CT_RoomId: " + roomId);
 
         const roomConfiguration = new RoomConfiguration();
         roomConfiguration.populateFields(roomRaw);
@@ -41,7 +41,7 @@ class RoomConfigurationFetcher {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.homematicName === roomName);
 
-        if (!roomRaw) throw new Error("Room does not exist in HMIP");
+        if (!roomRaw) throw new Error("Room does not exist in HMIP. HMIP_GroupName: " + roomName);
 
         const roomConfiguration = new RoomConfiguration();
         roomConfiguration.populateFields(roomRaw);
@@ -53,7 +53,7 @@ class RoomConfigurationFetcher {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.homematicId === roomId);
 
-        if (!roomRaw) throw new Error("Room does not exist in HMIP");
+        if (!roomRaw) throw new Error("Room does not exist in HMIP. HMIP_GroupID: " + roomId);
 
         const roomConfiguration = new RoomConfiguration();
         roomConfiguration.populateFields(roomRaw);
