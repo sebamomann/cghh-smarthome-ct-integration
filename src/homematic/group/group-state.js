@@ -60,7 +60,7 @@ class GroupState {
         const desiredTemperature = roomConfiguration.getDesiredRoomTemepratureForEvent(event);
 
         if (this.setTemperature !== roomConfiguration.desiredTemperatureIdle) {
-            console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] ${event.bezeichnung} ${this.label} update blocked due to current manual override`);
+            console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] ${event.bezeichnung}: ${this.label} update blocked due to current manual override`);
             return false;
         }
 

@@ -161,9 +161,9 @@ const handleGroupStateChange = (currentState, updatedState) => {
 
     // TODO AUSLAGERN
     if (currentState.label !== "INIT")
-        console.log("[" + moment().toLocaleString() + "] [Event] [GROUP UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
+        console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [GROUP UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
 
-    console.log("[" + moment().toLocaleString() + "] [Event] [GROUP UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
+    console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [GROUP UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
 };
 
 /**
@@ -184,9 +184,9 @@ const handleDeviceStateChange = (currentState, updatedState) => {
                     const currentChannel = currentState.channels.find(channel => channel.index = updatedChannel.index);
 
                     if (currentState.label !== "INIT")
-                        console.log("[" + moment().toLocaleString() + "] [Event] [DEVICE UPDATE] [FROM] " + currentState.label + " Set: " + currentChannel.setTemperature?.toFixed(1) + " Current: " + currentChannel.temperature?.toFixed(1) + " Valve: " + currentChannel.valvePosition?.toFixed(2) + " Channel: " + currentChannel.index);
+                        console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [DEVICE UPDATE] [FROM] " + currentState.label + " Set: " + currentChannel.setTemperature?.toFixed(1) + " Current: " + currentChannel.temperature?.toFixed(1) + " Valve: " + currentChannel.valvePosition?.toFixed(2) + " Channel: " + currentChannel.index);
 
-                    console.log("[" + moment().toLocaleString() + "] [Event] [DEVICE UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedChannel.setTemperature?.toFixed(1) + " Current: " + updatedChannel.temperature?.toFixed(1) + " Valve: " + updatedChannel.valvePosition?.toFixed(2) + " Channel: " + updatedChannel.index);
+                    console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [DEVICE UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedChannel.setTemperature?.toFixed(1) + " Current: " + updatedChannel.temperature?.toFixed(1) + " Valve: " + updatedChannel.valvePosition?.toFixed(2) + " Channel: " + updatedChannel.index);
                 }
             }
         );
@@ -220,9 +220,9 @@ const handleWeatherStateChange = (currentState, updatedState) => {
     //                             weatherDayTime: this.weatherDayTime
     // TODO AUSLAGERN
     if (currentState.label !== "INIT")
-        console.log("[" + moment().toLocaleString() + "] [Event] [WEATHER UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
+        console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [WEATHER UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
 
-    console.log("[" + moment().toLocaleString() + "] [Event] [WEATHER UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
+    console.log("[" + moment().format("YYYY-MM-DD HH:mm:ss") + "] [Event] [WEATHER UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
 };
 
 module.exports = { startEventListener };
