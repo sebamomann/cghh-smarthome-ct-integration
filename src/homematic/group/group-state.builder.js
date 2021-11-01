@@ -10,10 +10,10 @@ class GroupStateBuilder {
     }
 
     /**
-     * @param {string} groupId 
+     * @param {string} hmipGroupId 
      * @returns {GroupState}
      */
-    groupStateFromFile(groupId) {
+    groupStateFromFile(hmipGroupId) {
         var dataRaw;
 
         try {
@@ -23,10 +23,10 @@ class GroupStateBuilder {
         }
 
         const json_data = JSON.parse(dataRaw);
-        const groupStateRaw = json_data[groupId];
+        const groupStateRaw = json_data[hmipGroupId];
 
         if (!groupStateRaw) {
-            return this.buildInitGroupState();
+            return this.buildInitGroupState(hmipGroupId);
         }
 
         const groupState = new GroupState();
@@ -55,9 +55,10 @@ class GroupStateBuilder {
         return JSON.parse(JSON.stringify(state));
     }
 
-    buildInitGroupState() {
+    buildInitGroupState(hmipGroupId) {
         const groupState = new GroupState();
 
+        groupState.id = hmipGroupId;
         groupState.label = "INIT";
 
         return groupState;
