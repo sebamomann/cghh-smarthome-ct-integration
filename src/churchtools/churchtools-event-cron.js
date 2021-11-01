@@ -28,7 +28,7 @@ var roomConfigurationFetcher;
  * Initialize run for heating adjustment
  */
 async function execute() {
-    console.log("[CRON] Executing");
+    console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] Executing`);
 
     roomConfigurationFetcher = new RoomConfigurationFetcher();
     const events = await getEvents();
