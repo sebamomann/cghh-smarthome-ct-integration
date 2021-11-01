@@ -20,7 +20,6 @@ class EventTemperatureMapper {
 
         for (const [key, value] of Object.entries(mappings)) {
             if (eventName.toLowerCase().includes(key.toLowerCase())) {
-                console.log(value.desiredTemperature);
                 return value.desiredTemperature;
             }
         }

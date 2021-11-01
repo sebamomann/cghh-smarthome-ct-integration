@@ -6,6 +6,7 @@ const { RoomConfigurationFetcher } = require("../room/room-config.fetcher");
 
 const moment = require('moment-timezone');
 const { Console } = require("console");
+const { EventLogger } = require("../../util/event.logger");
 moment.tz.setDefault("Europe/Berlin");
 
 const FILE_NAME = process.cwd() + "/persistent/states/groups.json";
@@ -38,8 +39,6 @@ class GroupState {
     }
 
     async resolveLock() {
-        const eventNameThatCausedLock = this.lock.eventName;
-
         const roomConfigurationFetcher = new RoomConfigurationFetcher();
         const roomConfiguration = roomConfigurationFetcher.getRoomConfigurationByHomematicId(this.id);
         const desiredTemperature = roomConfiguration.desiredTemperatureIdle;
@@ -47,10 +46,9 @@ class GroupState {
         const api = new HomematicApi();
         await api.setTemperatureForGroup(this.id, desiredTemperature);
 
-        console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [-] ${this.label} to ${desiredTemperature} for ${eventNameThatCausedLock} ending at ${moment(this.lock.expiring).format("YYYY-MM-DD HH:mm:ss")}`);
+        EventLogger.resolveLock(this.label, desiredTemperature, lock);
 
         this.lock = null;
-
         this.save();
     }
 
@@ -60,7 +58,7 @@ class GroupState {
         const desiredTemperature = roomConfiguration.getDesiredRoomTemepratureForEvent(event);
 
         if (this.setTemperature !== roomConfiguration.desiredTemperatureIdle) {
-            console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] ${event.bezeichnung}: ${this.label} update blocked due to current manual override`);
+            EventLogger.groupUpdatePreheatBlocked(event.bezeichnung, this.label)
             return false;
         }
 
@@ -72,7 +70,7 @@ class GroupState {
             expiring: moment(event.enddate)
         };
 
-        console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] ${this.label} to ${desiredTemperature} for ${event.bezeichnung} starting at ${event.startdate}`);
+        EventLogger.groupUpdatePreheat(this.label, desiredTemperature, event)
 
         this.save();
         return true;

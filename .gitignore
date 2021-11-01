@@ -1,8 +1,3 @@
 node_modules
-examples/*.json
-secrets.json
-tokens.json
-churchtools/state.json
 .env
-state.json
-last_sent.json
+persistent/*

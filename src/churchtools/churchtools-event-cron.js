@@ -1,19 +1,18 @@
 // classes
+const { EventLogger } = require("../util/event.logger");
 const { GroupStateBuilder } = require("./../homematic/group/group-state.builder");
-
 const { RoomConfigurationFetcher } = require('./../homematic/room/room-config.fetcher');
-const { RoomConfiguration } = require('./../homematic/room/room-config');
-
 // functions
 const { getEvents } = require("./events");
 // elements
 const { filterEventsThatDidNotStartYetOrAreCurrentlyActive } = require("../util/event-filter.util");
-
 // other
 require('dotenv').config();
 const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
+
 const fs = require("fs");
+
 
 /** ------------------- */
 /** ------ ENTRY ------ */
@@ -28,7 +27,7 @@ var roomConfigurationFetcher;
  * Initialize run for heating adjustment
  */
 async function execute() {
-    console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] Executing`);
+    EventLogger.startCron();
 
     roomConfigurationFetcher = new RoomConfigurationFetcher();
     const events = await getEvents();
@@ -156,9 +155,8 @@ const handleBookingOfEventHeating = async (event, booking) => {
 
     if (calculatedTimeIsOverdue || eventAlreadyStarted) {
         const initiated = await groupState.heatGroupForEvent(event);
-        if (initiated) {
-            console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] Should take ~ ${Math.round(minutesNeededToReachDesiredTemperature)} minutes`);
-        }
+
+        if (initiated) EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
     }
 };
 
