@@ -1,5 +1,5 @@
 const { startEventListener } = require('./websocket');
-const { execute } = require("./cron-job");
+const { execute } = require("./src/churchtools/churchtools-event-cron");
 
 const CronJob = require('cron').CronJob;
 

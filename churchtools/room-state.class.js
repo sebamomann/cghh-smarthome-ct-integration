@@ -1,5 +1,0 @@
-class RoomState {
-    constructor(roomId) {
-        
-    }
-}
