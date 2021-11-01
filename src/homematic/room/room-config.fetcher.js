@@ -1,7 +1,7 @@
 var fs = require('fs');
-const { RoomConfiguration } = require('./room-config.class');
+const { RoomConfiguration } = require('./room-config');
 
-const FILE_NAME = __dirname + "/config/room.config.json";
+const FILE_NAME = process.cwd() + "/config/room.config.json";
 
 class RoomConfigurationFetcher {
 
@@ -12,11 +12,15 @@ class RoomConfigurationFetcher {
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
         this.state = JSON.parse(dataRaw);
     }
 
+    /**
+     * @param {RoomConfiguration} roomId 
+     * @returns 
+     */
     getRoomConfigurationById(roomId) {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.id === roomId);
@@ -29,9 +33,25 @@ class RoomConfigurationFetcher {
         return roomConfiguration;
     }
 
+    /**
+     * @param {*} roomName 
+     * @returns  {RoomConfiguration}
+     */
     getRoomConfigurationByHomematicName(roomName) {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.homematicName === roomName);
+
+        if (!roomRaw) throw new Error("Room does not exist in HMIP");
+
+        const roomConfiguration = new RoomConfiguration();
+        roomConfiguration.populateFields(roomRaw);
+
+        return roomConfiguration;
+    }
+
+    getRoomConfigurationByHomematicId(roomId) {
+        const rooms = this.state.rooms;
+        const roomRaw = rooms.find(room => room.homematicId === roomId);
 
         if (!roomRaw) throw new Error("Room does not exist in HMIP");
 

@@ -16,7 +16,7 @@ class HomeState {
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
         const json_data = JSON.parse(dataRaw);
 

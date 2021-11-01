@@ -1,3 +1,6 @@
+const { WeatherState } = require("../homematic/weather/weather-state");
+const { WeatherStateAnlyzer } = require("../homematic/weather/weather-state.analyzer");
+
 /**
  * Take information of a {@link GroupState} and parse it into a influx usable DB object 
  * 
@@ -69,26 +72,34 @@ const parseHeatingThermostatChannelDataIntoInfluxDataObject = (device, channel) 
     };
 };
 
-const parseHomeWeatherDataIntoInfluxDataObject = (home) => {
-    const temperature = home.weather.temperature;
-    const minTemperature = home.weather.minTemperature;
-    const maxTemperature = home.weather.maxTemperature;
-    const windSpeed = home.weather.windSpeed;
-    const humidity = home.weather.humidity;
-    const location = home.location.city.split(",")[0];
+/**
+ * Take information of a {@link WeatherState} and parse it into a influx usable DB object
+ *
+ * @param {WeatherState} group
+ *
+ * @returns void
+ */
+const parseWeatherStateIntoInfluxDataObject = (state) => {
+    const temperature = state.temperature;
+    const minTemperature = state.minTemperature;
+    const maxTemperature = state.maxTemperature;
+    const windSpeed = state.windSpeed;
+    const vaporAmount = state.vaporAmount;
+    const humidity = state.humidity;
 
     return {
-        label: location,
+        label: state.label,
         values: {
-            temperature: temperature,
-            humidity: humidity,
+            temperature,
+            humidity,
             minTemperature,
             maxTemperature,
             windSpeed,
+            vaporAmount
         },
         tags: {
-            weatherDayTime: home.weather.weatherDayTime,
-            weatherConditiion: home.weather.weatherCondition
+            weatherDayTime: state.weatherDayTime,
+            weatherConditiion: state.weatherCondition
         }
     };
 };
@@ -98,5 +109,5 @@ module.exports = {
     parseDeviceStateChannelIntoInfluxDataObject,
     parseHeatingGroupDataIntoInfluxDataObject,
     parseHeatingThermostatChannelDataIntoInfluxDataObject,
-    parseHomeWeatherDataIntoInfluxDataObject
+    parseWeatherStateIntoInfluxDataObject
 };

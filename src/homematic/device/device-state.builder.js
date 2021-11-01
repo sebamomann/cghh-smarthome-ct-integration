@@ -1,7 +1,9 @@
 const { DeviceState } = require("./device-state");
-const { Device } = require("./homematic/device/device");
+const { Device } = require("./device");
 
-const FILE_NAME = __dirname + "/states/devices.js";
+const fs = require("fs");
+
+const FILE_NAME = process.cwd() + "/persistent/states/devices.json";
 
 class DeviceStateBuilder {
     constructor() {
@@ -10,21 +12,22 @@ class DeviceStateBuilder {
 
     deviceStateFromFile(deviceId) {
         var dataRaw;
+
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
 
         const json_data = JSON.parse(dataRaw);
 
-        const deviceStateRaw = json_data.find(device => device.id === deviceId);
+        const deviceStateRaw = json_data[deviceId];
 
         if (!deviceStateRaw) {
             return this.buildInitDeviceState();
         }
 
-        const deviceState = new GroupState();
+        const deviceState = new DeviceState();
         Object.assign(deviceState, deviceStateRaw);
 
         return deviceState;
@@ -35,7 +38,7 @@ class DeviceStateBuilder {
      * @param {Device} device 
      * @returns 
      */
-    deviceStateFromGroup(device) {
+    deviceStateFromHomematicDevice(device) {
         const deviceState = new DeviceState();
 
         deviceState.id = device.data.id;
@@ -51,7 +54,7 @@ class DeviceStateBuilder {
                         index: channel.index,
                         valvePosition: channel.valvePosition,
                         temperature: channel.valveActualTemperature,
-                        setTemperature: channel.setTemperature
+                        setTemperature: channel.setPointTemperature
                     };
 
                     channels.push(outputChannel);
@@ -60,13 +63,13 @@ class DeviceStateBuilder {
 
         deviceState.channels = channels;
 
-        return groupState;
+        return deviceState;
     }
 
     /**
-     * @param {GroupState} state 
+     * @param {DeviceState} state 
      */
-    deviceStateFromGroupState(state) {
+    deviceStateFromDeviceState(state) {
         return JSON.parse(JSON.stringify(state));
     }
 
@@ -74,6 +77,7 @@ class DeviceStateBuilder {
         const deviceState = new DeviceState();
 
         deviceState.label = "INIT";
+        deviceState.channels = [];
 
         return deviceState;
     }

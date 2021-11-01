@@ -22,6 +22,7 @@
     "axios": "^0.24.0",
     "cron": "^1.8.2",
     "dotenv": "^10.0.0",
+    "fs-extra": "^10.0.0",
     "google-auth-library": "^7.0.4",
     "influx": "^5.9.2",
     "mkdirp": "^1.0.4",

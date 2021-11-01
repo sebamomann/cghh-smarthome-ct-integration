@@ -1,27 +1,29 @@
 var fs = require('fs');
+const { eventNames } = require('process');
+
+const FILE_NAME = process.cwd() + "/config/event-room-temperature.config.json";
 
 class EventTemperatureMapper {
-    static FILE_NAME = "./churchtools/event-root.temperature.config.json";
-
     constructor() {
     }
 
     static getDesiredTemperatureForEvent(eventName) {
         var dataRaw;
+
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
+
         const mappings = JSON.parse(dataRaw);
 
-        const mappingKeys = Object.keys(mappings);
-
-        mappingKeys.forEach(key => {
+        for (const [key, value] of Object.entries(mappings)) {
             if (eventName.toLowerCase().includes(key.toLowerCase())) {
-                return mappings[key].desiredTemperature;
+                console.log(value.desiredTemperature);
+                return value.desiredTemperature;
             }
-        });
+        }
 
         return undefined;
     }

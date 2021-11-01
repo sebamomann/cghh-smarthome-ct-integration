@@ -27,7 +27,7 @@ class InfluxDBManager {
             .forEach(
                 dataValueKey => {
                     const value = dataValues[dataValueKey];
-                    if (value) {
+                    if (value !== undefined && value !== null) {
                         point.floatField(dataValueKey, dataValues[dataValueKey]);
                     }
                 }

@@ -32,16 +32,12 @@ class GroupDataSender {
 
             resendGroupState.setTemperature = currentState.setTemperature;
 
-            console.log("RESEND");
             const resendGroupStateInflux = parseGroupStateIntoInfluxDataObject(resendGroupState);
             await this.influxDB.sendGenericInformation(resendGroupStateInflux, "group-heating");
-            console.log(resendGroupStateInflux);
         }
 
-        console.log("SEND");
         const newStateInflux = parseGroupStateIntoInfluxDataObject(newState);
         await this.influxDB.sendGenericInformation(newStateInflux, "group-heating");
-        console.log(newStateInflux);
     }
 }
 

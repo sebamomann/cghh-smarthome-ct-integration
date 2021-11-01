@@ -8,19 +8,25 @@ const CRON_INTERVAL = 10; // minutes
  *  
  * @returns Array of events with a startdate in the future
  */
-function filterEventsThatDidNotStartYet(events) {
+function filterEventsThatDidNotStartYetOrAreCurrentlyActive(events) {
     const filteredEvents = [];
 
     events.forEach(
         (event) => {
             const currentTime = moment();
-            const startTime = moment(event.startdate);
+            const start = moment(event.startdate);
+            const end = moment(event.enddate);
 
-            if (startTime.isAfter(currentTime)) {
+            const eventStartsInFuture = start.isAfter(currentTime);
+            const eventIsCurrentlyActive = currentTime.isBetween(start, end);
+
+            if (eventIsCurrentlyActive || eventStartsInFuture) {
                 filteredEvents.push(event);
             }
         }
     );
+
+    filteredEvents.sort((a, b) => moment(a.startdate) - moment(b.startdate));
 
     return filteredEvents;
 }
@@ -88,7 +94,7 @@ function isDateBetweenNowAndLastXMinutes(date, minutes) {
 }
 
 module.exports = {
-    filterEventsThatDidNotStartYet,
+    filterEventsThatDidNotStartYetOrAreCurrentlyActive,
     filterEventsThatEndedInTheLastCronTimeframe,
     filterCurrenltyActiveEvents
 };

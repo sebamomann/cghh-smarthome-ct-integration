@@ -1,25 +1,26 @@
 // classes
-const { RoomConfigurationFetcher } = require("./churchtools/room-config-fetcher.class");
-const { RoomConfiguration } = require('./churchtools/room-config.class');
-const { HomematicApi } = require('../homematic/homematic-api');
+const { GroupStateBuilder } = require("./../homematic/group/group-state.builder");
+
+const { RoomConfigurationFetcher } = require('./../homematic/room/room-config.fetcher');
+const { RoomConfiguration } = require('./../homematic/room/room-config');
+
 // functions
 const { getEvents } = require("./events");
 // elements
-const moment = require('moment-timezone');
-const { filterEventsThatEndedInTheLastCronTimeframe, filterEventsThatDidNotStartYet } = require("../util/event-filter.util");
-const { HomematicGroupMapper } = require("../util/homematic-group.mapper");
-const { HomeState } = require("./churchtools/home-state.class");
-moment.tz.setDefault("Europe/Berlin");
+const { filterEventsThatDidNotStartYetOrAreCurrentlyActive } = require("../util/event-filter.util");
+
 // other
 require('dotenv').config();
-
+const moment = require('moment-timezone');
+moment.tz.setDefault("Europe/Berlin");
+const fs = require("fs");
 
 /** ------------------- */
 /** ------ ENTRY ------ */
 /** ------------------- */
 
 /**
- * @type {RoomConfigurationFetcher}
+ * @type RoomConfigurationFetcher
  */
 var roomConfigurationFetcher;
 
@@ -43,8 +44,8 @@ async function execute() {
  * 
  * @returns void
  */
-function handleEvents(events) {
-    handleEventsForIdleAdjustments(events);
+async function handleEvents(events) {
+    await resolveGroupLocks();
     handleEventsForHeatingAdjustments(events);
 }
 
@@ -57,10 +58,10 @@ function handleEvents(events) {
  * @returns void
  */
 const handleEventsForHeatingAdjustments = (events) => {
-    const filteredEvents = filterEventsThatDidNotStartYet(events);
+    const filteredEvents = filterEventsThatDidNotStartYetOrAreCurrentlyActive(events);
 
     filteredEvents.forEach(event => {
-        handleEventForHeatingAdjustment(event, true);
+        handleEventForHeatingAdjustment(event);
     });
 };
 
@@ -72,27 +73,27 @@ const handleEventsForHeatingAdjustments = (events) => {
  * 
  * @returns void
  */
-function handleEventsForIdleAdjustments(events) {
-    const filteredEvents = filterCurrenltyActiveEvents(events);
-    const homeState = new HomeState();
-    const roomConfigurationFetcher = new RoomConfigurationFetcher();
+async function resolveGroupLocks() {
+    var groupsDataRaw;
 
-    const groupKeys = Object.keys(homeState.state);
-    groupKeys.forEach(
-        (groupKey) => {
-            const groupState = homeState.state[groupKey];
-            const roomConfiguration = roomConfigurationFetcher.getRoomConfigurationById(groupState.label);
+    try {
+        groupsDataRaw = fs.readFileSync(process.cwd() + "/config/room.config.json", 'utf8');
+    } catch (e) {
+        groupsDataRaw = "{}";
+    }
 
-            // TODO
-            const idleTemperatureForRoom = roomConfiguration.desiredTemperatureIdle;
+    const json_data = JSON.parse(groupsDataRaw);
+    const rooms = json_data.rooms;
 
-            const roomIsInUse = groupState.values.setTemperature;
+    for (const room of rooms) {
+        const groupId = room.homematicId;
+        const groupStateBuilder = new GroupStateBuilder();
+        const groupState = groupStateBuilder.groupStateFromFile(groupId);
+
+        if (groupState.groupIsLocked() && groupState.groupLockIsExpired()) {
+            await groupState.resolveLock();
         }
-    );
-
-    filteredEvents.forEach(event => {
-        handleEventForIdleAdjustment(event);
-    });
+    }
 }
 
 /**
@@ -102,15 +103,6 @@ function handleEventsForIdleAdjustments(events) {
  */
 const handleEventForHeatingAdjustment = (event) => {
     handleBookingsOfEvent(event, handleBookingOfEventHeating);
-};
-
-/**
- * @param {*} event     Event to manage
- * 
- * @returns void
- */
-const handleEventForIdleAdjustment = (event) => {
-    handleBookingsOfEvent(event, handleBookingOfEventIdle);
 };
 
 /**
@@ -142,106 +134,32 @@ const handleBookingsOfEvent = (event, callback) => {
  * 
  * @returns void
  */
-const handleBookingOfEventHeating = (event, booking) => {
+const handleBookingOfEventHeating = async (event, booking) => {
     var roomConfiguration;
 
     try {
-        roomConfiguration = getRoomConfigurationForBooking(booking);
+        roomConfiguration = roomConfigurationFetcher.getRoomConfigurationById(booking.resource_id);
     } catch (e) {
         return;
     }
 
-    const minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event);
+    const groupStateBuilder = new GroupStateBuilder();
+    const groupState = groupStateBuilder.groupStateFromFile(roomConfiguration.homematicId);
+
+    if (groupState.groupIsLocked()) return;
+
+    const minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
     const calculatedTimeToStartHeating = moment(event.startdate).subtract(minutesNeededToReachDesiredTemperature, "minute");
 
-    // if temperature is bigger than set temperature, still set thermostat to temp for logging
-    // happens if minutesToReachTemperature is 0
-    const eventIsInFiveMinutesOrLess = moment(event.startdate).subtract(5, "minute").isBefore(moment());
     const calculatedTimeIsOverdue = calculatedTimeToStartHeating.isBefore(moment());
+    const eventAlreadyStarted = moment(event.startdate).isBefore(moment());
 
-    if (calculatedTimeIsOverdue || eventIsInFiveMinutesOrLess) {
-        initializeHeatingForRoom(event, roomConfiguration);
-        console.log(`[${moment()}] [CRON] [ROOM UPDATE] [+] Should take ${minutesNeededToReachDesiredTemperature} minutes`);
+    if (calculatedTimeIsOverdue || eventAlreadyStarted) {
+        const initiated = await groupState.heatGroupForEvent(event);
+        if (initiated) {
+            console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [CRON] [ROOM UPDATE] [+] Should take ~ ${Math.round(minutesNeededToReachDesiredTemperature)} minutes`);
+        }
     }
-};
-
-/**
- * Execute adjustment to idle for booking (contained room)
- *
- * @param {*} event     Event containing passed booking
- * @param {*} booking   Booking (room) to adjust
- *
- * @returns void
- */
-const handleBookingOfEventIdle = (event, booking) => {
-    try {
-        const roomConfiguration = getRoomConfigurationForBooking(booking);
-        initializeIdleForRoom(event, roomConfiguration);
-    } catch (e) {
-        return;
-    }
-};
-
-/**
- * Convert the room reference of the passed booking into the current {@link RoomConfiguration}
- * 
- * @param {*} booking   Booking containing room reference
- * 
- * @returns {RoomConfiguration}
- */
-const getRoomConfigurationForBooking = (booking) => {
-    const ct_roomId = booking.resource_id;
-
-    try {
-        return roomConfigurationFetcher.getRoomConfigurationById(ct_roomId);
-    } catch (e) {
-        throw new Error("Room does not exist in HMIP");
-    }
-};
-
-/**
- * Get all relevant data for sending update request to homematic API for HEATING
- * 
- * @param {*} event 
- * @param {RoomConfiguration} roomConfiguration
- * 
- * @returns void
- */
-function initializeHeatingForRoom(event, roomConfiguration) {
-    const desiredTemperature = roomConfiguration.getDesiredRoomTemepratureForEvent(event);
-    const hmip_groupId = HomematicGroupMapper.getGroupIdByName(roomConfiguration.homematicName);
-
-    updateTemperatureForGroup(hmip_groupId, desiredTemperature);
-    console.log(`[${moment()}] [CRON] [ROOM UPDATE] [+] ${desiredTemperature} for ${event.bezeichnung} starting at ${event.startdate}`);
-}
-
-/**
- * Get all relevant data for sending update request to homematic API for IDLE
- * 
- * @param {*} event 
- * @param {RoomConfiguration} roomConfiguration 
- * 
- * @returns void
- */
-const initializeIdleForRoom = (event, roomConfiguration) => {
-    const desiredTemperature = roomConfiguration.desiredTemperatureIdle;
-    const hmip_groupId = HomematicGroupMapper.getGroupIdByName(roomConfiguration.homematicName);
-
-    updateTemperatureForGroup(hmip_groupId, desiredTemperature);
-    console.log(`[${moment()}] [CRON] [ROOM UPDATE] [-] ${desiredTemperature} for ${event.bezeichnung} ending at ${event.enddate}`);
-};
-
-/**
- * Execute request sending to homematic API
- * 
- * @param {string} hmip_groupId         Group to update
- * @param {number} desiredTemperature   Temperature to be set
- * @param {*} event                     Event that caused the change
- * @param {boolean} toIdle              Is change to idle temperature
- */
-const updateTemperatureForGroup = async (hmip_groupId, desiredTemperature) => {
-    const api = new HomematicApi();
-    await api.setTemperatureForGroup(hmip_groupId, desiredTemperature);
 };
 
 module.exports = { execute };

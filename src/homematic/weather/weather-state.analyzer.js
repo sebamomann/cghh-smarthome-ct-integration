@@ -1,4 +1,4 @@
-class GroupStateAnlyzer {
+class WeatherStateAnlyzer {
 
     currentState;
     updatedState;
@@ -12,7 +12,7 @@ class GroupStateAnlyzer {
      * @returns {boolean}
      */
     statesAreIdentical() {
-        const compareAttributes = ["temperature", "setTemperature", "humidity"];
+        const compareAttributes = ["temperature", "minTemperature", "maxTemperature", "humidity", "windSpeed", "vaporAmount", "weatherCondition", "weatherDayTime"];
 
         for (const attribute of compareAttributes) {
             if (this.currentState[attribute] !== this.updatedState[attribute]) {
@@ -22,14 +22,6 @@ class GroupStateAnlyzer {
 
         return true;
     }
-
-    /**
-     * @returns {boolean}
-     */
-    didSetTemperatureChange() {
-        return this.currentState.setTemperature !== this.updatedState.setTemperature;
-    }
-
 }
 
-module.exports = { GroupStateAnlyzer };
+module.exports = { WeatherStateAnlyzer };

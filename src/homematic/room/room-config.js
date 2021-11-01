@@ -8,6 +8,7 @@ class RoomConfiguration {
     heatingOffset;
     heatingOffsetIdle;
     homematicName;
+    homematicId;
     desiredTemperature;
     desiredTemperatureIdle;
     heatingRate;
@@ -23,6 +24,7 @@ class RoomConfiguration {
         this.heatingOffset = roomRaw.heatingOffset;
         this.heatingOffsetIdle = roomRaw.heatingOffsetIdle;
         this.homematicName = roomRaw.homematicName;
+        this.homematicId = roomRaw.homematicId;
         this.desiredTemperature = roomRaw.desiredTemperature;
         this.desiredTemperatureIdle = roomRaw.desiredTemperatureIdle;
         this.heatingRate = roomRaw.heatingRate;
@@ -35,9 +37,9 @@ class RoomConfiguration {
      * 
      * @param {*} event 
      */
-    getMinutesNeededToReachTemperatureForEvent(event) {
+    getMinutesNeededToReachTemperatureForEvent(event, groupState) {
         const desiredTemperature = this.getDesiredRoomTemepratureForEvent(event);
-        const currentRoomTemperature = this.getCurrentRoomTemperature();
+        const currentRoomTemperature = groupState.temperature;
 
         if (!currentRoomTemperature) return 120; // fallback if no current temperature entry is present
 
@@ -64,13 +66,6 @@ class RoomConfiguration {
         }
 
         return temperature;
-    }
-
-
-    getCurrentRoomTemperature() {
-        /**
-         * TODO
-         */
     }
 };
 

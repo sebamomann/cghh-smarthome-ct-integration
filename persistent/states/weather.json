@@ -1,0 +1,13 @@
+{
+  "76646  Bruchsal": {
+    "label": "76646  Bruchsal",
+    "temperature": 12.7,
+    "minTemperature": 10.4,
+    "maxTemperature": 13.7,
+    "humidity": 76,
+    "windSpeed": 8.028,
+    "vaporAmount": 8.444587073425556,
+    "weatherCondition": "HEAVILY_CLOUDY",
+    "weatherDayTime": "DAY"
+  }
+}

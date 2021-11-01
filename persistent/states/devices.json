@@ -1,0 +1,38 @@
+{
+  "3014F711A000201D898CDFD2": {
+    "id": "3014F711A000201D898CDFD2",
+    "label": "Heizkörperthermostat - Eingangsbereich",
+    "channels": [
+      {
+        "index": 1,
+        "valvePosition": 0,
+        "temperature": 16.2,
+        "setTemperature": 15
+      }
+    ]
+  },
+  "3014F711A000201D898CDDA0": {
+    "id": "3014F711A000201D898CDDA0",
+    "label": "Heizkörperthermostat - Kleinkindbereich",
+    "channels": [
+      {
+        "index": 1,
+        "valvePosition": 0,
+        "temperature": 17.7,
+        "setTemperature": 16
+      }
+    ]
+  },
+  "3014F711A000201D898CDD9B": {
+    "id": "3014F711A000201D898CDD9B",
+    "label": "Heizkörperthermostat - Foyer",
+    "channels": [
+      {
+        "index": 1,
+        "valvePosition": 0,
+        "temperature": 17.5,
+        "setTemperature": 16
+      }
+    ]
+  }
+}

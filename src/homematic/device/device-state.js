@@ -1,6 +1,7 @@
 const fs = require("fs");
+const fse = require("fs-extra");
 
-const FILE_NAME = __dirname + "/states/devices.json";
+const FILE_NAME = process.cwd() + "/persistent/states/devices.json";
 
 class DeviceState {
 
@@ -16,10 +17,11 @@ class DeviceState {
 
     save() {
         var dataRaw;
+
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
 
         const json_data = JSON.parse(dataRaw);
@@ -32,7 +34,7 @@ class DeviceState {
 
         json_data[this.id] = data;
 
-        fs.writeFileSync(FILE_NAME, JSON.stringify(json_data, null, 2), { encoding: 'utf8', flag: "w" });
+        fse.outputFileSync(FILE_NAME, JSON.stringify(json_data, null, 2));
     }
 }
 

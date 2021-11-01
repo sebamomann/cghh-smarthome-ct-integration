@@ -1,7 +1,5 @@
 const { WebsocketManager } = require("../websocket-manager");
 
-const { parseHomeWeatherDataIntoInfluxDataObject } = require("../util/homematic-influx.mapper");
-
 const { Group } = require("./group/group");
 const { GroupState } = require("./group/group-state");
 const { GroupStateBuilder } = require("./group/group-state.builder");
@@ -14,7 +12,15 @@ const { DeviceStateBuilder } = require("./device/device-state.builder");
 const { DeviceStateAnalyzer } = require("./device/device-state.analyzer");
 const { DeviceDataSender } = require("./device/device.data-sender");
 
+const { Home } = require("./weather/home");
+const { WeatherState } = require("./weather/weather-state");
+const { WeatherStateBuilder } = require("./weather/weather-state.builder");
+const { WeatherStateAnlyzer } = require("./weather/weather-state.analyzer");
 const { WeatherDataSender } = require("./weather/weather.data-sender");
+
+
+const moment = require('moment-timezone');
+moment.tz.setDefault("Europe/Berlin");
 
 require("dotenv").config();
 
@@ -109,7 +115,7 @@ const handleDeviceChanged = (event) => {
     const deviceStateBuilder = new DeviceStateBuilder();
 
     const currentDeviceState = deviceStateBuilder.deviceStateFromFile(device.data.id);
-    const updatedDeviceState = deviceStateBuilder.deviceStateFromGroup(device);
+    const updatedDeviceState = deviceStateBuilder.deviceStateFromHomematicDevice(device);
 
     handleDeviceStateChange(currentDeviceState, updatedDeviceState);
 };
@@ -123,12 +129,18 @@ const handleDeviceChanged = (event) => {
  * @param {*} event 
  */
 const handleHomeChangeEvent = (event) => {
-    const raw_home = event.home;
+    const rawHome = event.home;
 
-    if (!raw_home) return;
+    if (!rawHome) return;
 
-    const data = parseHomeWeatherDataIntoInfluxDataObject(raw_home);
-    sendWeatherData(data);
+    const home = new Home(rawHome);
+
+    const weatherStateBuilder = new WeatherStateBuilder();
+
+    const currentWeatherState = weatherStateBuilder.weatherStateFromFile(home.data.location.city.split(",")[0]);
+    const updatedWeatherState = weatherStateBuilder.weatherStateFromHomematicHome(home);
+
+    handleWeatherStateChange(currentWeatherState, updatedWeatherState);
 };
 
 /**
@@ -147,12 +159,14 @@ const handleGroupStateChange = (currentState, updatedState) => {
 
     updatedState.save();
 
-    console.log("[" + moment() + "] [Event] [GROUP UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
-    console.log("[" + moment() + "] [Event] [GROUP UPDATE] [TOOO] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
+    // TODO AUSLAGERN
+    if (currentState.label !== "INIT")
+        console.log("[" + moment().toLocaleString() + "] [Event] [GROUP UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
+
+    console.log("[" + moment().toLocaleString() + "] [Event] [GROUP UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
 };
 
 /**
- *
  * @param {DeviceState} currentState
  * @param {DeviceState} updatedState
  * @returns
@@ -167,10 +181,12 @@ const handleDeviceStateChange = (currentState, updatedState) => {
                     const dataSender = new DeviceDataSender();
                     dataSender.sendChannelData(currentState, updatedState, updatedChannel.index);
 
-                    const currentChannel = currentState.channels[updatedChannel.index];
+                    const currentChannel = currentState.channels.find(channel => channel.index = updatedChannel.index);
 
-                    console.log("[" + moment() + "] [Event] [GROUP UPDATE] [FROM] " + currentState.label + " Set: " + currentChannel.setTemperature?.toFixed(1) + " Current: " + currentChannel.temperature?.toFixed(1) + " Valve: " + currentChannel.valvePosition?.toFixed(2) + " Channel: " + currentChannel.index);
-                    console.log("[" + moment() + "] [Event] [GROUP UPDATE] [TOOO] " + updatedState.label + " Set: " + updatedChannel.setTemperature?.toFixed(1) + " Current: " + updatedChannel.temperature?.toFixed(1) + " Valve: " + updatedChannel.valvePosition?.toFixed(2) + " Channel: " + updatedChannel.index);
+                    if (currentState.label !== "INIT")
+                        console.log("[" + moment().toLocaleString() + "] [Event] [DEVICE UPDATE] [FROM] " + currentState.label + " Set: " + currentChannel.setTemperature?.toFixed(1) + " Current: " + currentChannel.temperature?.toFixed(1) + " Valve: " + currentChannel.valvePosition?.toFixed(2) + " Channel: " + currentChannel.index);
+
+                    console.log("[" + moment().toLocaleString() + "] [Event] [DEVICE UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedChannel.setTemperature?.toFixed(1) + " Current: " + updatedChannel.temperature?.toFixed(1) + " Valve: " + updatedChannel.valvePosition?.toFixed(2) + " Channel: " + updatedChannel.index);
                 }
             }
         );
@@ -179,30 +195,34 @@ const handleDeviceStateChange = (currentState, updatedState) => {
 };
 
 /**
- * Check if weather data changed.
- * Initialize data send.
- * Log event.
- *
- * @param {*} data
+ * @param {WeatherState} currentState 
+ * @param {WeatherState} updatedState
+ * @returns 
  */
-const sendWeatherData = (data) => {
-    // TODO
-    const lastSentDataManager = new LastSentDataManager(data);
+const handleWeatherStateChange = (currentState, updatedState) => {
+    const weatherStateAnalyzer = new WeatherStateAnlyzer(currentState, updatedState);
 
-    if (lastSentDataManager.lastSentDataIsStillCorrect()) return;
+    // if (weatherStateAnalyzer.statesAreIdentical()) return;
 
     const dataSender = new WeatherDataSender();
-    dataSender.sendData(lastSentDataManager.lastData, data);
+    dataSender.sendData(currentState, updatedState);
 
-    lastSentDataManager.updateLastSent();
+    updatedState.save();
 
-    const lsdm = lastSentDataManager.lastData;
 
-    console.log("[Event] [WEATHER UPDATE] [FROM] Temp: " + lsdm.values.temperature.toFixed(1) + " Hum: " + lsdm.values.humidity.toFixed(1));
-    console.log("[Event] [WEATHER UPDATE] [TOOO] Temp: " + data.values.temperature.toFixed(1) + " Hum: " + data.values.humidity.toFixed(1));
-    console.log("-----");
+    // temperature: this.temperature,
+    //     minTemperature: this.minTemperature,
+    //         maxTemperature: this.maxTemperature,
+    //             humidity: this.humidity,
+    //                 windSpeed: this.windSpeed,
+    //                     vaporAmount: this.vaporAmount,
+    //                         weatherCondition: this.weatherCondition,
+    //                             weatherDayTime: this.weatherDayTime
+    // TODO AUSLAGERN
+    if (currentState.label !== "INIT")
+        console.log("[" + moment().toLocaleString() + "] [Event] [WEATHER UPDATE] [FROM] " + currentState.label + " Set: " + currentState.setTemperature?.toFixed(1) + " Current: " + currentState.temperature?.toFixed(1) + " Hum: " + currentState.humidity?.toFixed(1));
+
+    console.log("[" + moment().toLocaleString() + "] [Event] [WEATHER UPDATE] [" + (currentState.label === "INIT" ? "INIT" : "TOOO") + "] " + updatedState.label + " Set: " + updatedState.setTemperature?.toFixed(1) + " Current: " + updatedState.temperature?.toFixed(1) + " Hum: " + updatedState.humidity?.toFixed(1));
 };
-
-startEventListener();
 
 module.exports = { startEventListener };

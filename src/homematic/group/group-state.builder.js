@@ -1,23 +1,29 @@
 const { GroupState } = require("./group-state");
 
-const FILE_NAME = __dirname + "/states/groups.js";
+const fs = require("fs");
+
+const FILE_NAME = process.cwd() + "/persistent/states/groups.json";
 
 class GroupStateBuilder {
     constructor() {
 
     }
 
+    /**
+     * @param {string} groupId 
+     * @returns {GroupState}
+     */
     groupStateFromFile(groupId) {
         var dataRaw;
+
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
-            console.log(dataRaw);
         } catch (e) {
-            dataRaw = {};
+            dataRaw = "{}";
         }
-        const json_data = JSON.parse(dataRaw);
 
-        const groupStateRaw = json_data.find(group => group.id === groupId);
+        const json_data = JSON.parse(dataRaw);
+        const groupStateRaw = json_data[groupId];
 
         if (!groupStateRaw) {
             return this.buildInitGroupState();

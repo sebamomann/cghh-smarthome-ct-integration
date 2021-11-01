@@ -14,11 +14,16 @@ class DeviceStateAnalyzer {
     channelsAreIdentical(channelIndex) {
         const compareAttributes = ["temperature", "setTemperature", "valvePosition"];
 
-        compareAttributes.forEach((attribute) => {
-            if (this.currentState[channelIndex][attribute] !== this.updatedState[channelIndex][attribute]) {
+        const currentChannel = this.currentState.channels.find(channel => channel.index = channelIndex);
+        const updatedChannel = this.updatedState.channels.find(channel => channel.index = channelIndex);
+
+        for (const attribute of compareAttributes) {
+            if (!currentChannel) return false;
+
+            if (currentChannel[attribute] !== updatedChannel[attribute]) {
                 return false;
             }
-        });
+        };
 
         return true;
     }
@@ -27,7 +32,12 @@ class DeviceStateAnalyzer {
      * @returns {boolean}
      */
     didSetChannelTemperatureChange(channelIndex) {
-        return this.currentState[channelIndex].setTemperature === this.updatedState[channelIndex].setTemperature;
+        const currentChannel = this.currentState.channels.find(channel => channel.index = channelIndex);
+        const updatedChannel = this.updatedState.channels.find(channel => channel.index = channelIndex);
+
+        if (!currentChannel) return false;
+
+        return currentChannel.setTemperature !== updatedChannel.setTemperature;
     }
 
 }

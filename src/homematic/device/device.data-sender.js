@@ -1,5 +1,5 @@
 const { DeviceState } = require("./device-state");
-const { DeviceStateAnlyzer } = require("./device-state.analyzer");
+const { DeviceStateAnalyzer } = require("./device-state.analyzer");
 const { parseDeviceStateChannelIntoInfluxDataObject } = require("../../util/homematic-influx.mapper");
 const { InfluxDBManager } = require("../../influx/influx-db");
 
@@ -22,28 +22,27 @@ class DeviceDataSender {
      * If so, resend this set temperature before the new data. This causes a aprupt change in the db visualization of setTemperature.
      * Otherwise a slow rise in the setTemperature would be interpreted.
      * 
-     * @param {DeviceState} currentData 
-     * @param {DeviceState} updatedData
+     * @param {DeviceState} currentState 
+     * @param {DeviceState} updatedState
      */
-    async sendChannelData(currentData, updatedData, channelIndex) {
-        const deviceStateAnalyzer = new DeviceStateAnlyzer(currentState, newState);
+    async sendChannelData(currentState, updatedState, channelIndex) {
+        const deviceStateAnalyzer = new DeviceStateAnalyzer(currentState, updatedState);
         const didSetChannelTemperatureChange = deviceStateAnalyzer.didSetChannelTemperatureChange(channelIndex);
 
+        const currentChannel = currentState.channels.find(channel => channel.index = channelIndex);
+        const updatedChannel = updatedState.channels.find(channel => channel.index = channelIndex);
+
         if (didSetChannelTemperatureChange) {
-            const resendChannel = updatedData[channelIndex];
+            const resendChannel = Object.assign({}, updatedChannel);
 
-            resendChannel.setTemperature = currentData.channels[channelIndex].setTemperature;
+            resendChannel.setTemperature = currentChannel.setTemperature;
 
-            console.log("RESEND");
-            const resendDeviceStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedData, channel);
+            const resendDeviceStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedState, resendChannel);
             await this.influxDB.sendGenericInformation(resendDeviceStateInflux, "device-heating-thermostat");
-            console.log(resendDeviceStateInflux);
         }
 
-        console.log("SEND");
-        const newStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedData, updatedData.channels[channelIndex]);
+        const newStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedState, updatedChannel);
         await this.influxDB.sendGenericInformation(newStateInflux, "device-heating-thermostat");
-        console.log(newStateInflux);
     }
 }
 
