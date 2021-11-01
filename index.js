@@ -8,8 +8,8 @@ require('dotenv').config();
 /**
  * ENTRYPOINT
  */
-const job = new CronJob(process.env.CRON_DEFINITION, () => execute());
-job.start();
+// const job = new CronJob(process.env.CRON_DEFINITION, () => execute());
+// job.start();
 
-execute();
+// execute();
 startEventListener();
