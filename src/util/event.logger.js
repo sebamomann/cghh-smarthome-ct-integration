@@ -113,7 +113,7 @@ class EventLogger {
             fromTo,
             state.label,
             state.temperature.toFixed(1),
-            state.minTeperature.toFixed(1),
+            state.minTemperature.toFixed(1),
             state.maxTemperature.toFixed(1),
             state.humidity.toFixed(1),
             state.windSpeed.toFixed(4),
