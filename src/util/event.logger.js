@@ -1,4 +1,7 @@
+const { currentTime } = require('@influxdata/influxdb-client');
 const moment = require('moment-timezone');
+const { InfluxDBManager } = require('../influx/influx-db');
+const { PendingLogsManager } = require('../pending-logs.manager');
 moment.tz.setDefault("Europe/Berlin");
 
 class EventLogger {
@@ -41,9 +44,14 @@ class EventLogger {
             roomName,
             eventName,
         ];
-        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [#] %s preheating is blocked for event %s due to current manual override`, ...values);
+
+        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [#] %s preheating is blocked for event '%s' due to current manual override`, ...values);
     }
 
+    /**
+     * @param {GroupState} currentState 
+     * @param {GroupState} updatedState 
+     */
     static groupUpdateEvent(currentState, updatedState) {
         const isInitialUpdate = currentState.label === "INIT";
         if (!isInitialUpdate) {
@@ -52,6 +60,8 @@ class EventLogger {
 
         const fromTo = isInitialUpdate ? "INIT" : "TOOO";
         this.groupUpdateEventString(fromTo, updatedState);
+
+        this.groupUpdateEventToInflux(currentState, updatedState);
     }
 
     static groupUpdateEventString(fromTo, state) {
@@ -123,6 +133,19 @@ class EventLogger {
         ];
 
         console.log(`[${this.t()}] [Event] [WTR UPDATE] [%s] %s CurrTemp: %d - MinTemp: %d - MaxTemp: %d - Humidity: %d - WindSpeed: %d - VaporAmount: %d - WeatherCond: %s - Time: %s`, ...values);
+    }
+
+    static groupUpdateEventToInflux(currentState, updatedState) {
+        if (currentState.setTemperature !== updatedState.setTemperature) {
+            const pendingLogsManager = new PendingLogsManager();
+            const influxDB = new InfluxDBManager();
+
+            const isPending = pendingLogsManager.isPendingForGroupId(currentState.id);
+
+            influxDB.sendGroupLog(currentState, updatedState, isPending);
+
+            if (isPending) pendingLogsManager.setPendingForGroupId(currentState.id, false);
+        }
     }
 
     static ft = (string) => {

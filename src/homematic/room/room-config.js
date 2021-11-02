@@ -17,6 +17,7 @@ class RoomConfiguration {
     constructor() {
     }
 
+    // TODO auslagern
     populateFields(roomRaw) {
         this.id = roomRaw.id;
         this.name = roomRaw.name;

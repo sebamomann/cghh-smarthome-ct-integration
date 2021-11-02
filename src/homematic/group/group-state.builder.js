@@ -1,38 +1,8 @@
 const { GroupState } = require("./group-state");
 
-const fs = require("fs");
-
-const FILE_NAME = process.cwd() + "/persistent/states/groups.json";
-
 class GroupStateBuilder {
     constructor() {
 
-    }
-
-    /**
-     * @param {string} hmipGroupId 
-     * @returns {GroupState}
-     */
-    groupStateFromFile(hmipGroupId) {
-        var dataRaw;
-
-        try {
-            dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
-        } catch (e) {
-            dataRaw = "{}";
-        }
-
-        const json_data = JSON.parse(dataRaw);
-        const groupStateRaw = json_data[hmipGroupId];
-
-        if (!groupStateRaw) {
-            return this.buildInitGroupState(hmipGroupId);
-        }
-
-        const groupState = new GroupState();
-        Object.assign(groupState, groupStateRaw);
-
-        return groupState;
     }
 
     groupStateFromHomematicGroup(group) {

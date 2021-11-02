@@ -1,31 +1,52 @@
 var fs = require('fs');
+const { outputFileSync } = require('fs-extra');
 const { RoomConfiguration } = require('./room-config');
 
 const FILE_NAME = process.cwd() + "/config/room.config.json";
 
-class RoomConfigurationFetcher {
+class RoomConfigurationDB {
 
     state;
 
     constructor() {
         var dataRaw;
+
         try {
             dataRaw = fs.readFileSync(FILE_NAME, 'utf8');
         } catch (e) {
             dataRaw = "{}";
         }
+
         this.state = JSON.parse(dataRaw);
     }
 
     /**
-     * @param {RoomConfiguration} roomId 
-     * @returns 
+     * @returns {RoomConfiguration[]}
      */
-    getRoomConfigurationById(roomId) {
+    getAll() {
         const rooms = this.state.rooms;
-        const roomRaw = rooms.find(room => room.id === roomId);
 
-        if (!roomRaw) throw new Error("Room does not exist in HMIP. CT_RoomId: " + roomId);
+        const output = [];
+
+        rooms.forEach(roomRaw => {
+            const roomConfiguration = new RoomConfiguration();
+            roomConfiguration.populateFields(roomRaw);
+
+            output.push(roomConfiguration);
+        });
+
+        return output;
+    }
+
+    /**
+     * @param   {String} ct_roomId 
+     * @returns {RoomConfiguration}
+     */
+    getByChurchtoolsId(ct_roomId) {
+        const rooms = this.state.rooms;
+        const roomRaw = rooms.find(room => room.id === ct_roomId);
+
+        if (!roomRaw) throw new Error("Room does not exist in HMIP. CT_RoomId: " + ct_roomId);
 
         const roomConfiguration = new RoomConfiguration();
         roomConfiguration.populateFields(roomRaw);
@@ -34,10 +55,10 @@ class RoomConfigurationFetcher {
     }
 
     /**
-     * @param {*} roomName 
-     * @returns  {RoomConfiguration}
+     * @param   {String} roomName 
+     * @returns {RoomConfiguration}
      */
-    getRoomConfigurationByHomematicName(roomName) {
+    getByHomematicName(roomName) {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.homematicName === roomName);
 
@@ -49,7 +70,11 @@ class RoomConfigurationFetcher {
         return roomConfiguration;
     }
 
-    getRoomConfigurationByHomematicId(roomId) {
+    /**
+     * @param   {string} roomId
+     * @returns {RoomConfiguration}
+     */
+    getByHomematicId(roomId) {
         const rooms = this.state.rooms;
         const roomRaw = rooms.find(room => room.homematicId === roomId);
 
@@ -62,4 +87,4 @@ class RoomConfigurationFetcher {
     }
 }
 
-module.exports = { RoomConfigurationFetcher };
+module.exports = { RoomConfigurationDB };

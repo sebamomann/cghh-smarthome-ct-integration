@@ -99,7 +99,8 @@ const parseWeatherStateIntoInfluxDataObject = (state) => {
         },
         tags: {
             weatherDayTime: state.weatherDayTime,
-            weatherConditiion: state.weatherCondition
+            weatherCondition: state.weatherCondition,
+            tag: "ALL"
         }
     };
 };

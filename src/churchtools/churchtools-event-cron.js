@@ -1,7 +1,6 @@
 // classes
 const { EventLogger } = require("../util/event.logger");
-const { GroupStateBuilder } = require("./../homematic/group/group-state.builder");
-const { RoomConfigurationFetcher } = require('./../homematic/room/room-config.fetcher');
+const { RoomConfigurationDB } = require('../homematic/room/room-config.db');
 // functions
 const { getEvents } = require("./events");
 // elements
@@ -11,7 +10,12 @@ require('dotenv').config();
 const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
 
-const fs = require("fs");
+const { Lock } = require("../homematic/lock/lock");
+const { LockDB } = require("../homematic/lock/lock.db");
+const { GroupManager } = require("../homematic/group/group-manager");
+const { GroupStateDB } = require("../homematic/group/group-state.db");
+const { GroupState } = require("../homematic/group/group-state");
+const { RoomConfiguration } = require("../homematic/room/room-config");
 
 
 /** ------------------- */
@@ -19,9 +23,9 @@ const fs = require("fs");
 /** ------------------- */
 
 /**
- * @type RoomConfigurationFetcher
+ * @type RoomConfigurationDB
  */
-var roomConfigurationFetcher;
+var roomConfigurationDB;
 
 /**
  * Initialize run for heating adjustment
@@ -29,23 +33,11 @@ var roomConfigurationFetcher;
 async function execute() {
     EventLogger.startCron();
 
-    roomConfigurationFetcher = new RoomConfigurationFetcher();
+    roomConfigurationDB = new RoomConfigurationDB();
     const events = await getEvents();
 
+    await manageLocks();
     handleEvents(events);
-}
-
-/**
- * 1. Loop through events to check if thermostats can be adjusted to idle temperature
- * 2. Loop through events to check if thermostats need to be adjusted to preheat
- * 
- * @param {*} events    Events to consider for thermostat adjustments
- * 
- * @returns void
- */
-async function handleEvents(events) {
-    await resolveGroupLocks();
-    handleEventsForHeatingAdjustments(events);
 }
 
 /**
@@ -56,7 +48,7 @@ async function handleEvents(events) {
  * 
  * @returns void
  */
-const handleEventsForHeatingAdjustments = (events) => {
+const handleEvents = (events) => {
     const filteredEvents = filterEventsThatDidNotStartYetOrAreCurrentlyActive(events);
 
     filteredEvents.forEach(event => {
@@ -72,26 +64,38 @@ const handleEventsForHeatingAdjustments = (events) => {
  * 
  * @returns void
  */
-async function resolveGroupLocks() {
-    var groupsDataRaw;
+async function manageLocks() {
+    const roomConfigs = roomConfigurationDB.getAll();
+
+    for (const roomConfig of roomConfigs) {
+        await manageLockForRoom(roomConfig);
+    }
+}
+
+/**
+ * @param {RoomConfiguration} roomConfig 
+ */
+async function manageLockForRoom(roomConfig) {
+    const hmip_groupId = roomConfig.homematicId;
+
+    var lock;
 
     try {
-        groupsDataRaw = fs.readFileSync(process.cwd() + "/config/room.config.json", 'utf8');
+        const lockDB = new LockDB();
+        lock = lockDB.getByGroupId(hmip_groupId);
     } catch (e) {
-        groupsDataRaw = "{}";
+        return;
     }
 
-    const json_data = JSON.parse(groupsDataRaw);
-    const rooms = json_data.rooms;
+    if (lock.isExpired()) {
+        const groupStateDB = new GroupStateDB();
+        const groupState = groupStateDB.getById(hmip_groupId);
+        const groupManager = new GroupManager(groupState.id, roomConfig, groupState);
+        await groupManager.setToIdle();
+        const lockDB = new LockDB();
+        lockDB.delete(lock);
 
-    for (const room of rooms) {
-        const groupId = room.homematicId;
-        const groupStateBuilder = new GroupStateBuilder();
-        const groupState = groupStateBuilder.groupStateFromFile(groupId);
-
-        if (groupState.groupIsLocked() && groupState.groupLockIsExpired()) {
-            await groupState.resolveLock();
-        }
+        EventLogger.resolveLock(this.label, roomConfig.desiredTemperatureIdle, lock);
     }
 }
 
@@ -101,18 +105,6 @@ async function resolveGroupLocks() {
  * @returns void
  */
 const handleEventForHeatingAdjustment = (event) => {
-    handleBookingsOfEvent(event, handleBookingOfEventHeating);
-};
-
-/**
- * Loopp through each booking of the event and execute custom fallback method, passing the booking
- * 
- * @param {*} event     Event containing bookings 
- * @param {*} callback  Callback to execute with each booking
- * 
- * @returns void
- */
-const handleBookingsOfEvent = (event, callback) => {
     const bookings = event.bookings;
 
     if (!bookings) return;
@@ -121,7 +113,7 @@ const handleBookingsOfEvent = (event, callback) => {
 
     bookingKeys.forEach(bookingKey => {
         const booking = bookings[bookingKey];
-        callback(event, booking);
+        handleBookingOfEventHeating(event, booking);
     });
 };
 
@@ -134,18 +126,26 @@ const handleBookingsOfEvent = (event, callback) => {
  * @returns void
  */
 const handleBookingOfEventHeating = async (event, booking) => {
+    /** @type {RoomConfiguration} */
     var roomConfiguration;
 
     try {
-        roomConfiguration = roomConfigurationFetcher.getRoomConfigurationById(booking.resource_id);
+        roomConfiguration = roomConfigurationDB.getByChurchtoolsId(booking.resource_id);
     } catch (e) {
         return;
     }
 
-    const groupStateBuilder = new GroupStateBuilder();
-    const groupState = groupStateBuilder.groupStateFromFile(roomConfiguration.homematicId);
+    const lockDB = new LockDB();
 
-    if (groupState.groupIsLocked()) return;
+    try {
+        lockDB.getByGroupId(roomConfiguration.homematicId);
+        return; // room locked - stop
+    } catch (e) {
+        // no locks, all good;
+    }
+
+    const groupStateDB = new GroupStateDB();
+    const groupState = groupStateDB.getById(roomConfiguration.homematicId);
 
     const minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
     const calculatedTimeToStartHeating = moment(event.startdate).subtract(minutesNeededToReachDesiredTemperature, "minute");
@@ -154,9 +154,23 @@ const handleBookingOfEventHeating = async (event, booking) => {
     const eventAlreadyStarted = moment(event.startdate).isBefore(moment());
 
     if (calculatedTimeIsOverdue || eventAlreadyStarted) {
-        const initiated = await groupState.heatGroupForEvent(event);
+        try {
+            const groupManager = new GroupManager(groupState.id, roomConfiguration, groupState);
+            await groupManager.heatForEvent(event);
+            EventLogger.groupUpdatePreheat(groupState.label, roomConfiguration.getDesiredRoomTemepratureForEvent(event), event);
+            EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
 
-        if (initiated) EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
+            const lock = new Lock();
+            lock.expiring = moment(event.enddate);
+            lock.eventName = event.bezeichnung;
+            lock.groupId = groupState.id;
+            lockDB.save(lock);
+        } catch (e) {
+            if (e.message !== "Blocked") console.log(e);
+
+            // blocked due to existing manual override
+            EventLogger.groupUpdatePreheatBlocked(event.bezeichnung, groupState.label);
+        }
     }
 };
 

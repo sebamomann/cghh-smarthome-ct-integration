@@ -2,25 +2,28 @@ const { WebsocketManager } = require("../websocket-manager");
 
 const { Group } = require("./group/group");
 const { GroupState } = require("./group/group-state");
+const { GroupStateDB } = require("./group/group-state.db");
 const { GroupStateBuilder } = require("./group/group-state.builder");
 const { GroupStateAnlyzer } = require("./group/group-state.analyzer");
 const { GroupDataSender } = require("./group/group.data-sender");
 
 const { Device } = require("./device/device");
 const { DeviceState } = require("./device/device-state");
+const { DeviceStateDB } = require("./device/device-state.db");
 const { DeviceStateBuilder } = require("./device/device-state.builder");
 const { DeviceStateAnalyzer } = require("./device/device-state.analyzer");
 const { DeviceDataSender } = require("./device/device.data-sender");
 
 const { Home } = require("./weather/home");
 const { WeatherState } = require("./weather/weather-state");
+const { WeatherStateDB } = require("./weather/weather-state.db");
 const { WeatherStateBuilder } = require("./weather/weather-state.builder");
 const { WeatherStateAnlyzer } = require("./weather/weather-state.analyzer");
 const { WeatherDataSender } = require("./weather/weather.data-sender");
 
+const { EventLogger } = require("../util/event.logger");
 
 const moment = require('moment-timezone');
-const { EventLogger } = require("../util/event.logger");
 moment.tz.setDefault("Europe/Berlin");
 
 require("dotenv").config();
@@ -88,8 +91,16 @@ const handleGroupChangeEvent = (event) => {
     if (!group.isHeatingGroup()) return;
 
     const groupStateBuilder = new GroupStateBuilder();
+    const groupStateDB = new GroupStateDB();
 
-    const currentGroupState = groupStateBuilder.groupStateFromFile(group.data.id);
+    var currentGroupState;
+
+    try {
+        currentGroupState = groupStateDB.getById(group.data.id);
+    } catch (e) {
+        currentGroupState = groupStateBuilder.buildInitGroupState();
+    }
+
     const updatedGroupState = groupStateBuilder.groupStateFromHomematicGroup(group);
 
     updatedGroupState.lock = currentGroupState.lock;
@@ -158,7 +169,8 @@ const handleGroupStateChange = (currentState, updatedState) => {
     const dataSender = new GroupDataSender();
     dataSender.sendData(currentState, updatedState);
 
-    updatedState.save();
+    const groupStateDB = new GroupStateDB();
+    groupStateDB.save(updatedState);
 
     EventLogger.groupUpdateEvent(currentState, updatedState);
 };
@@ -170,6 +182,7 @@ const handleGroupStateChange = (currentState, updatedState) => {
  */
 const handleDeviceStateChange = (currentState, updatedState) => {
     const deviceStateAnalyzer = new DeviceStateAnalyzer(currentState, updatedState);
+    const deviceStateDB = new DeviceStateDB();
 
     updatedState.channels
         .forEach(
@@ -183,7 +196,7 @@ const handleDeviceStateChange = (currentState, updatedState) => {
             }
         );
 
-    updatedState.save();
+    deviceStateDB.save(updatedState);
 };
 
 /**
@@ -199,7 +212,8 @@ const handleWeatherStateChange = (currentState, updatedState) => {
     const dataSender = new WeatherDataSender();
     dataSender.sendData(currentState, updatedState);
 
-    updatedState.save();
+    const weatherStateDB = new WeatherStateDB();
+    weatherStateDB.save(updatedState);
 
     EventLogger.weatherUpdateEvent(currentState, updatedState);
 };
