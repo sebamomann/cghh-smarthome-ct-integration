@@ -130,6 +130,9 @@ const handleBookingOfEventHeating = async (event, booking) => {
     /** @type {RoomConfiguration} */
     var roomConfiguration;
 
+    // ONLY ALLOW ROOMS WITH STATUS "gebucht"
+    if (booking.status_id !== "2") return;
+
     try {
         roomConfiguration = roomConfigurationDB.getByChurchtoolsId(booking.resource_id);
     } catch (e) {
