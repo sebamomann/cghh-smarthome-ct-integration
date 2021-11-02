@@ -10,6 +10,10 @@ class GroupStateDB {
 
     }
 
+    /**
+     * @param   {string} hmip_groupId 
+     * @returns {GroupState}
+     */
     getById(hmip_groupId) {
         const json_data = this.getFileContent();
         const groupStateRaw = json_data[hmip_groupId];

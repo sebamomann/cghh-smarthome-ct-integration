@@ -78,6 +78,7 @@ async function manageLocks() {
 async function manageLockForRoom(roomConfig) {
     const hmip_groupId = roomConfig.homematicId;
 
+    /** @type {Lock} */
     var lock;
 
     try {
@@ -91,11 +92,11 @@ async function manageLockForRoom(roomConfig) {
         const groupStateDB = new GroupStateDB();
         const groupState = groupStateDB.getById(hmip_groupId);
         const groupManager = new GroupManager(groupState.id, roomConfig, groupState);
-        await groupManager.setToIdle();
+        await groupManager.setToIdle(lock.eventName);
         const lockDB = new LockDB();
         lockDB.delete(lock);
 
-        EventLogger.resolveLock(this.label, roomConfig.desiredTemperatureIdle, lock);
+        EventLogger.resolveLock(groupState.label, roomConfig.desiredTemperatureIdle, lock);
     }
 }
 

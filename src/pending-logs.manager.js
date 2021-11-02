@@ -9,20 +9,28 @@ class PendingLogsManager {
 
     }
 
-    /**
-     * @param {String} groupId
-     */
-    isPendingForGroupId = (groupId) => {
+    getPendingObjectByGroupId = (groupId) => {
         const json_data = this.getFileContent();
-        return json_data[groupId] === true;
+        return json_data[groupId];
     };
 
     /**
      * @param {String} groupId
      */
-    setPendingForGroupId = (groupId, pending) => {
+    isPendingForGroupId = (groupId) => {
         const json_data = this.getFileContent();
-        json_data[groupId] = pending;
+        return json_data[groupId].pending === true;
+    };
+
+    /**
+     * @param {String} groupId
+     */
+    setPendingForGroupId = (groupId, pending, eventName) => {
+        const json_data = this.getFileContent();
+        json_data[groupId] = {
+            pending: pending,
+            eventName: eventName
+        };
         fse.outputFileSync(FILE_NAME, JSON.stringify(json_data, null, 2));
     };
 

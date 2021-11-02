@@ -23,12 +23,12 @@ class GroupManager {
         this.homematicAPI = new HomematicApi();
     }
 
-    async setToIdle() {
+    async setToIdle(eventName) {
         const desiredTemperature = this.roomConfiguration.desiredTemperatureIdle;
         await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
 
         const pendingLogsManager = new PendingLogsManager();
-        pendingLogsManager.setPendingForGroupId(this.groupId, true);
+        pendingLogsManager.setPendingForGroupId(this.groupId, true, eventName);
     }
 
     /**
@@ -42,7 +42,7 @@ class GroupManager {
         await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
 
         const pendingLogsManager = new PendingLogsManager();
-        pendingLogsManager.setPendingForGroupId(this.groupId, true);
+        pendingLogsManager.setPendingForGroupId(this.groupId, true, event.bezeichnung);
     }
 
 }

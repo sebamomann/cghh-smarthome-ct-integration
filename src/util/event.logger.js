@@ -140,11 +140,12 @@ class EventLogger {
             const pendingLogsManager = new PendingLogsManager();
             const influxDB = new InfluxDBManager();
 
-            const isPending = pendingLogsManager.isPendingForGroupId(currentState.id);
+            const pendigObj = pendingLogsManager.getPendingObjectByGroupId(currentState.id);
+            const isPending = pendigObj?.pending;
 
-            influxDB.sendGroupLog(currentState, updatedState, isPending);
+            influxDB.sendGroupLog(currentState, updatedState, isPending, pendigObj?.eventName);
 
-            if (isPending) pendingLogsManager.setPendingForGroupId(currentState.id, false);
+            if (isPending) pendingLogsManager.setPendingForGroupId(currentState.id, false, null);
         }
     }
 

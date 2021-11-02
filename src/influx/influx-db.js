@@ -19,12 +19,12 @@ class InfluxDBManager {
      * @param {GroupState} updatedState
      * @param {GroupState} automatic
      */
-    async sendGroupLog(currentState, updatedState, automatic) {
+    async sendGroupLog(currentState, updatedState, automatic, eventName) {
         const writeApi = this.influx.getWriteApi(this.org, "logs");
         writeApi.useDefaultTags({});
 
         const point = new Point("Temperature manipulation");
-        point.stringField("log", `[${(automatic ? "AUTO" : "MANU")}] ${currentState.label} - Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature}`);
+        point.stringField("log", `[${(automatic ? "AUTO" : "MANU")}] ${currentState.label} - Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature} ${(automatic ? "(for event '" + eventName + "')" : "")}`);
 
         writeApi.writePoint(point);
 
