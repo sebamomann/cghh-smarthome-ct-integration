@@ -97,11 +97,11 @@ const parseWeatherStateIntoInfluxDataObject = (state) => {
             windSpeed,
             vaporAmount
         },
-        tags: {
-            weatherDayTime: state.weatherDayTime,
-            weatherCondition: state.weatherCondition,
-            tag: "ALL"
-        }
+        // tags: {
+        //     weatherDayTime: state.weatherDayTime,
+        //     weatherCondition: state.weatherCondition,
+        //     tag: "ALL"
+        // }
     };
 };
 
