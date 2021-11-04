@@ -39,10 +39,19 @@ class GroupManager {
 
         if (this.roomState.setTemperature !== this.roomConfiguration.desiredTemperatureIdle) throw new Error("Blocked");
 
-        await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
-
+        // set before data send, otherwise websocket might trigger before lock is set
         const pendingLogsManager = new PendingLogsManager();
         pendingLogsManager.setPendingForGroupId(this.groupId, true, event.bezeichnung);
+
+        try {
+            await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
+        } catch (e) {
+            console.log("[ERROR] Can't set temperature");
+            console.log(e);
+
+            // revert pending
+            pendingLogsManager.setPendingForGroupId(this.groupId, false, null);
+        }
     }
 
 }

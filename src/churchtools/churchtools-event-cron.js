@@ -161,6 +161,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
         try {
             const groupManager = new GroupManager(groupState.id, roomConfiguration, groupState);
             await groupManager.heatForEvent(event);
+            
             EventLogger.groupUpdatePreheat(groupState.label, roomConfiguration.getDesiredRoomTemepratureForEvent(event), event);
             EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
 

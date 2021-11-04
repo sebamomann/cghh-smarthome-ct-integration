@@ -60,8 +60,6 @@ class EventLogger {
 
         const fromTo = isInitialUpdate ? "INIT" : "TOOO";
         this.groupUpdateEventString(fromTo, updatedState);
-
-        this.groupUpdateEventToInflux(currentState, updatedState);
     }
 
     static groupUpdateEventString(fromTo, state) {

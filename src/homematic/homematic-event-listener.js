@@ -173,6 +173,7 @@ const handleGroupStateChange = (currentState, updatedState) => {
     groupStateDB.save(updatedState);
 
     EventLogger.groupUpdateEvent(currentState, updatedState);
+    EventLogger.groupUpdateEventToInflux(currentState, updatedState);
 };
 
 /**
