@@ -98,7 +98,7 @@ const handleGroupChangeEvent = (event) => {
     try {
         currentGroupState = groupStateDB.getById(group.data.id);
     } catch (e) {
-        currentGroupState = groupStateBuilder.buildInitGroupState();
+        currentGroupState = groupStateBuilder.buildInitGroupState(group.data.id);
     }
 
     const updatedGroupState = groupStateBuilder.groupStateFromHomematicGroup(group);

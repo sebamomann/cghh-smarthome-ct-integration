@@ -37,7 +37,7 @@ class GroupManager {
     async heatForEvent(event) {
         const desiredTemperature = this.roomConfiguration.getDesiredRoomTemepratureForEvent(event);
 
-        if (this.roomState.setTemperature !== this.roomConfiguration.desiredTemperatureIdle) throw new Error("Blocked");
+        if (this.roomState.setTemperature !== this.roomConfiguration.desiredTemperatureIdle && this.roomState.setTemperature !== undefined) throw new Error("Blocked");
 
         // set before data send, otherwise websocket might trigger before lock is set
         const pendingLogsManager = new PendingLogsManager();

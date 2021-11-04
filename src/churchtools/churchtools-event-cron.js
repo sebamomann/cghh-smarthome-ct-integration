@@ -16,6 +16,7 @@ const { GroupManager } = require("../homematic/group/group-manager");
 const { GroupStateDB } = require("../homematic/group/group-state.db");
 const { GroupState } = require("../homematic/group/group-state");
 const { RoomConfiguration } = require("../homematic/room/room-config");
+const { GroupStateBuilder } = require("../homematic/group/group-state.builder");
 
 
 /** ------------------- */
@@ -149,7 +150,14 @@ const handleBookingOfEventHeating = async (event, booking) => {
     }
 
     const groupStateDB = new GroupStateDB();
-    const groupState = groupStateDB.getById(roomConfiguration.homematicId);
+    const groupStateBuilder = new GroupStateBuilder();
+    var groupState;
+
+    try {
+        groupState = groupStateDB.getById(roomConfiguration.homematicId);
+    } catch (e) {
+        groupState = groupStateBuilder.buildInitGroupState(roomConfiguration.homematicId);
+    }
 
     const minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
     const calculatedTimeToStartHeating = moment(event.startdate).subtract(minutesNeededToReachDesiredTemperature, "minute");
@@ -161,7 +169,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
         try {
             const groupManager = new GroupManager(groupState.id, roomConfiguration, groupState);
             await groupManager.heatForEvent(event);
-            
+
             EventLogger.groupUpdatePreheat(groupState.label, roomConfiguration.getDesiredRoomTemepratureForEvent(event), event);
             EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
 
