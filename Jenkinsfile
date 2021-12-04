@@ -73,7 +73,7 @@ pipeline {
                                 -v cghh-smarthome-ct-integration/config:/usr/src/app/config \
                                 -v cghh-smarthome-ct-integration/persistent:/usr/src/app/persistent \
                                 --network=cghh-smarthome \
-                                -d ' + ${image_name}
+                                -d ' + $image_name
                     }
                 }
             }
