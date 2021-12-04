@@ -68,7 +68,12 @@ pipeline {
                         } catch (err) {
                             echo "cant remove container - it does not exist"
                         }
-                        sh "docker run --name ${name} -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/.env:/usr/src/app/.env -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/config:/usr/src/app/config -v /var/www/vhosts/sebamomann.dankoe.de/cghh-smarthome-ct-integration/persistent:/usr/src/app/persistent --network=cghh-smarthome -d ${image_name}"
+                        sh 'docker run --name ${name} \
+                                -v cghh-smarthome-ct-integration/.env:/usr/src/app/.env \
+                                -v cghh-smarthome-ct-integration/config:/usr/src/app/config \
+                                -v cghh-smarthome-ct-integration/persistent:/usr/src/app/persistent \
+                                --network=cghh-smarthome \
+                                -d ${image_name}'
                     }
                 }
             }
