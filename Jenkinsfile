@@ -73,7 +73,7 @@ pipeline {
                                 -v /var/lib/docker/volumes/cghh-smarthome-ct-integration/_data/config:/usr/src/app/config \
                                 -v /var/lib/docker/volumes/cghh-smarthome-ct-integration/_data/persistent:/usr/src/app/persistent \
                                 --network=cghh-smarthome \
-                                -d ${image_name}"
+                                -d ${image_name} "
                     }
                 }
             }
