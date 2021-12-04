@@ -18,7 +18,6 @@ class WeatherDataSender {
      */
     async sendData(currentState, updatedState) {
         const resendWeatherStateInflux = parseWeatherStateIntoInfluxDataObject(updatedState);
-
         await this.influxDB.sendGenericInformation(resendWeatherStateInflux, "weather");
     }
 }

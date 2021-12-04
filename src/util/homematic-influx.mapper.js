@@ -10,28 +10,48 @@ const { WeatherStateAnlyzer } = require("../homematic/weather/weather-state.anal
  */
 const parseGroupStateIntoInfluxDataObject = (state) => {
     return {
-        label: state.label,
+        label: "sensoric",
         values: {
             temperature: state.temperature,
             setTemperature: state.setTemperature,
             humidity: state.humidity,
+        },
+        tags: {
+            name: state.label.replace(/\s/g, "_"),
+            type: "HEATING"
         }
     };
 };
 
 const parseDeviceStateChannelIntoInfluxDataObject = (state, channel) => {
     return {
-        label: state.label,
+        label: "sensoric",
         values: {
             temperature: channel.temperature,
             setTemperature: channel.setTemperature,
-            valvePosition: channel.valvePosition * 100,
         },
         tags: {
-            channel: channel.index
+            channel: channel.index,
+            name: state.label.replace(/\s/g, "_"),
+            type: "HEATING_THERMOSTAT"
         }
     };
 };
+
+const parseDeviceStateChannelIntoInfluxDataObjectState = (state, channel) => {
+    return {
+        label: "sensoric",
+        values: {
+            valvePosition: channel.valvePosition * 100,
+        },
+        tags: {
+            channel: channel.index,
+            name: state.label.replace(/\s/g, "_"),
+            type: "HEATING_THERMOSTAT"
+        }
+    };
+};
+
 
 /**
  * Take information of heating group and parse it into a influx parsable DB object 
@@ -108,6 +128,7 @@ const parseWeatherStateIntoInfluxDataObject = (state) => {
 module.exports = {
     parseGroupStateIntoInfluxDataObject,
     parseDeviceStateChannelIntoInfluxDataObject,
+    parseDeviceStateChannelIntoInfluxDataObjectState,
     parseHeatingGroupDataIntoInfluxDataObject,
     parseHeatingThermostatChannelDataIntoInfluxDataObject,
     parseWeatherStateIntoInfluxDataObject

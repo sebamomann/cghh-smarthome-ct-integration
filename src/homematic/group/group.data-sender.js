@@ -23,21 +23,8 @@ class GroupDataSender {
      * @param {GroupState} newState
      */
     async sendData(currentState, newState) {
-        const groupStateAnalyzer = new GroupStateAnlyzer(currentState, newState);
-        const didSetTemperatureChange = groupStateAnalyzer.didSetTemperatureChange();
-
-        if (didSetTemperatureChange) {
-            const groupStateBuilder = new GroupStateBuilder();
-            const resendGroupState = groupStateBuilder.groupStateFromGroupState(newState);
-
-            resendGroupState.setTemperature = currentState.setTemperature;
-
-            const resendGroupStateInflux = parseGroupStateIntoInfluxDataObject(resendGroupState);
-            await this.influxDB.sendGenericInformation(resendGroupStateInflux, "group-heating");
-        }
-
         const newStateInflux = parseGroupStateIntoInfluxDataObject(newState);
-        await this.influxDB.sendGenericInformation(newStateInflux, "group-heating");
+        await this.influxDB.sendGenericInformation(newStateInflux, "groups");
     }
 }
 

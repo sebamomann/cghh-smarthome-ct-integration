@@ -24,8 +24,12 @@ class InfluxDBManager {
         writeApi.useDefaultTags({});
 
         const point = new Point("Temperature manipulation");
-        point.stringField("log", `[${(automatic ? "AUTO" : "MANU")}] ${currentState.label} - Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature} ${(automatic ? "(for event '" + eventName + "')" : "")}`);
-
+        point.stringField("log", `Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature}`);
+        point.tags = {
+            group: currentState.label.replace(/\s/g, ""),
+            type: (automatic ? "AUTO" : "MANU"),
+            event: (automatic ? eventName.replace(/\s/g, "") : "")
+        };
         writeApi.writePoint(point);
 
         try {

@@ -1,6 +1,6 @@
 const { DeviceState } = require("./device-state");
 const { DeviceStateAnalyzer } = require("./device-state.analyzer");
-const { parseDeviceStateChannelIntoInfluxDataObject } = require("../../util/homematic-influx.mapper");
+const { parseDeviceStateChannelIntoInfluxDataObject, parseDeviceStateChannelIntoInfluxDataObjectState } = require("../../util/homematic-influx.mapper");
 const { InfluxDBManager } = require("../../influx/influx-db");
 
 /**
@@ -26,23 +26,12 @@ class DeviceDataSender {
      * @param {DeviceState} updatedState
      */
     async sendChannelData(currentState, updatedState, channelIndex) {
-        const deviceStateAnalyzer = new DeviceStateAnalyzer(currentState, updatedState);
-        const didSetChannelTemperatureChange = deviceStateAnalyzer.didSetChannelTemperatureChange(channelIndex);
-
-        const currentChannel = currentState.channels.find(channel => channel.index = channelIndex);
         const updatedChannel = updatedState.channels.find(channel => channel.index = channelIndex);
 
-        if (didSetChannelTemperatureChange) {
-            const resendChannel = Object.assign({}, updatedChannel);
-
-            resendChannel.setTemperature = currentChannel.setTemperature;
-
-            const resendDeviceStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedState, resendChannel);
-            await this.influxDB.sendGenericInformation(resendDeviceStateInflux, "device-heating-thermostat");
-        }
-
         const newStateInflux = parseDeviceStateChannelIntoInfluxDataObject(updatedState, updatedChannel);
-        await this.influxDB.sendGenericInformation(newStateInflux, "device-heating-thermostat");
+        await this.influxDB.sendGenericInformation(newStateInflux, "devices");
+        const newStateInfluxState = parseDeviceStateChannelIntoInfluxDataObjectState(updatedState, updatedChannel);
+        await this.influxDB.sendGenericInformation(newStateInfluxState, "devices");
     }
 }
 
