@@ -14,7 +14,6 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => {
         pingUptime("OK");
     } catch (e) {
         console.log(e);
-        pingUptime("ERROR");
     }
 });
 
