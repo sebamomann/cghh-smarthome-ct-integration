@@ -22,10 +22,11 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => {
 job.start();
 
 const pingUptime = (message) => {
+    console.log("[CRON] Sending Heartbeat");
     let url = process.env.UPTIME_KUMA_URL + "?msg=" + message + "&ping=";
     axios.get(url)
         .then((response) => {
-            console.log("Heartbeat send to Uptime");
+            console.log("[CRON] Heartbeat sent to Uptime");
         })
         .catch((err) => {
             console.log(err);
