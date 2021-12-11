@@ -21,10 +21,6 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => {
 
 job.start();
 
-pingUptime("OK");
-execute();
-startEventListener();
-
 const pingUptime = (message) => {
     let url = process.env.UPTIME_KUMA_URL + "?msg=" + message + "&ping=";
     axios.get(url)
@@ -35,3 +31,7 @@ const pingUptime = (message) => {
             console.log(err);
         });
 };
+
+pingUptime("OK");
+execute();
+startEventListener();
