@@ -10,7 +10,7 @@ async function getEvents() {
     await loginForSessionRevalidation();
 
     var url = "https://heidelsheim.church.tools/index.php?q=churchcal/ajax&func=getCalendarEvents&from=-1&to=1";
-    const categoryIds = [9, 36, 2, 3, 5, 1, 14, 4, 13, 39];
+    const categoryIds = process.env.CALENDAR_CATEGORIES.split(",");
 
     categoryIds
         .forEach(id => {
@@ -30,9 +30,13 @@ async function getEvents() {
 
         var events = response.data.data;
 
+        if (response.data.status === "error") {
+            throw new Error(response.data);
+        }
+
         return events;
     } catch (error) {
-        console.log(error);
+        throw new Error(error);
     }
 };
 

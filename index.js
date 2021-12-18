@@ -33,6 +33,6 @@ const pingUptime = (message) => {
         });
 };
 
-pingUptime("OK");
+// pingUptime("OK");
 execute();
-startEventListener();
+// startEventListener();
