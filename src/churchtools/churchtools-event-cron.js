@@ -137,6 +137,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
     try {
         roomConfiguration = roomConfigurationDB.getByChurchtoolsId(booking.resource_id);
     } catch (e) {
+        console.log("Room not found by CT ID");
         return;
     }
 

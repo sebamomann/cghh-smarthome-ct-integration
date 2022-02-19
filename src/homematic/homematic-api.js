@@ -40,12 +40,15 @@ class HomematicApi {
 
         const url = this.API_URL + "hmip/" + path;
 
+        var response;
         try {
-            const response = await axios.post(url, payload, { headers });
+            response = await axios.post(url, payload, { headers });
             return response.data;
         } catch (e) {
             console.log("[ERROR] [API CALL] [HOMEMATIC] Could not execute API request");
             console.log("[ERROR] [API CALL] [HOMEMATIC] Reson: " + e);
+            console.log("[ERROR] [API CALL] [HOMEMATIC] Payload: " + payload);
+            console.log("[ERROR] [API CALL] [HOMEMATIC] " + response.data);
 
             throw Error(e);
         }
