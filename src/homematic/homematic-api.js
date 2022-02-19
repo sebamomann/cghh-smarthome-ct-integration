@@ -47,8 +47,8 @@ class HomematicApi {
         } catch (e) {
             console.log("[ERROR] [API CALL] [HOMEMATIC] Could not execute API request");
             console.log("[ERROR] [API CALL] [HOMEMATIC] Reson: " + e);
-            console.log("[ERROR] [API CALL] [HOMEMATIC] Payload: " + payload);
-            console.log("[ERROR] [API CALL] [HOMEMATIC] " + response.data);
+            console.log("[ERROR] [API CALL] [HOMEMATIC] Payload: " + JSON.stringify(payload));
+            console.log("[ERROR] [API CALL] [HOMEMATIC] " + e.response.data);
 
             throw Error(e);
         }
