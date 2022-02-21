@@ -26,18 +26,19 @@ class GroupManager {
     async setToIdle(eventName) {
         const desiredTemperature = this.roomConfiguration.desiredTemperatureIdle;
 
+        const pendingLogsManager = new PendingLogsManager();
+
         try {
             await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
+
+            pendingLogsManager.setPendingForGroupId(this.groupId, true, eventName);
         } catch (e) {
             console.log("[ERROR] [IDLE] Can't set temperature " + desiredTemperature + " for Group " + this.groupId + "");
-            console.log(e);
+            // console.log(e);
 
             // revert pending
             pendingLogsManager.setPendingForGroupId(this.groupId, false, null);
         }
-
-        const pendingLogsManager = new PendingLogsManager();
-        pendingLogsManager.setPendingForGroupId(this.groupId, true, eventName);
     }
 
     /**
