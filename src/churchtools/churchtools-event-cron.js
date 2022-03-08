@@ -42,6 +42,30 @@ async function execute() {
 }
 
 /**
+ * If no lock exists for the room, reset it to idle
+ */
+async function resetEverythingIfNotLocked() {
+    const roomConfigs = roomConfigurationDB.getAll();
+
+    for (const roomConfig of roomConfigs) {
+        const hmip_groupId = roomConfig.homematicId;
+
+        try {
+            try {
+                const lockDB = new LockDB();
+                const lock = lockDB.getByGroupId(hmip_groupId);
+                continue;
+            } catch (e) {
+                await this.homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
+            }
+        } catch (e) {
+            console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " to " + roomConfig.desiredTemperatureIdle);
+            console.log("[ERROR] [RESET] " + e);
+        }
+    }
+}
+
+/**
  * Filter relevant HEATING events and execute event handling.
  * Relevant events are events that did not start yet.
  * 
@@ -190,4 +214,4 @@ const handleBookingOfEventHeating = async (event, booking) => {
     }
 };
 
-module.exports = { execute };
+module.exports = { execute, resetEverythingIfNotLocked };
