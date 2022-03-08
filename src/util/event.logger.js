@@ -13,8 +13,8 @@ class EventLogger {
     /**
      * @param {string} minutes 
      */
-    static heatingTimeExpectancy(minutes) {
-        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [+] Preheating takes ~ ${Math.round(minutes)} minutes`);
+    static heatingTimeExpectancy(minutes, minpreOfBooking) {
+        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [+] Preheating takes ~ ${Math.round(minutes)} minutes (incl. ${minpreOfBooking} min booking offset)`);
     }
 
     static resolveLock(groupName, desiredTemperature, lock) {

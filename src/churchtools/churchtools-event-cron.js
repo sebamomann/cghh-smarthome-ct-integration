@@ -160,7 +160,9 @@ const handleBookingOfEventHeating = async (event, booking) => {
         groupState = groupStateBuilder.buildInitGroupState(roomConfiguration.homematicId);
     }
 
-    const minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
+    var minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
+    const minpreOfBooking = booking.minpre;
+    minutesNeededToReachDesiredTemperature += minpreOfBooking;
     const calculatedTimeToStartHeating = moment(event.startdate).subtract(minutesNeededToReachDesiredTemperature, "minute");
 
     const calculatedTimeIsOverdue = calculatedTimeToStartHeating.isBefore(moment());
@@ -172,7 +174,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
             await groupManager.heatForEvent(event);
 
             EventLogger.groupUpdatePreheat(groupState.label, roomConfiguration.getDesiredRoomTemepratureForEvent(event), event);
-            EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature);
+            EventLogger.heatingTimeExpectancy(minutesNeededToReachDesiredTemperature, minpreOfBooking);
 
             const lock = new Lock();
             lock.expiring = moment(event.enddate);
