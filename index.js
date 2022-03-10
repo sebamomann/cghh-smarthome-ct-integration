@@ -1,6 +1,9 @@
 const { execute, resetEverythingIfNotLocked } = require("./src/churchtools/churchtools-event-cron");
 const { startEventListener } = require("./src/homematic/homematic-event-listener");
 
+const moment = require('moment-timezone');
+moment.tz.setDefault("Europe/Berlin");
+
 const axios = require('axios');
 
 const CronJob = require('cron').CronJob;
@@ -15,7 +18,7 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => {
         await execute();
         pingUptime("OK");
 
-        if (moment().hours() === 0 && moment().minutes() === 0) { 
+        if (moment().hours() === 0 && moment().minutes() === 0) {
             resetEverythingIfNotLocked();
         }
     } catch (e) {
