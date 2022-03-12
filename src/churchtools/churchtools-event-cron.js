@@ -10,6 +10,8 @@ require('dotenv').config();
 const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
 
+const { HomematicApi } = require("./../homematic/homematic-api");
+
 const { Lock } = require("../homematic/lock/lock");
 const { LockDB } = require("../homematic/lock/lock.db");
 const { GroupManager } = require("../homematic/group/group-manager");
@@ -46,6 +48,7 @@ async function execute() {
  */
 async function resetEverythingIfNotLocked() {
     const roomConfigs = roomConfigurationDB.getAll();
+    const homematicAPI = new HomematicApi();
 
     for (const roomConfig of roomConfigs) {
         const hmip_groupId = roomConfig.homematicId;
@@ -56,7 +59,7 @@ async function resetEverythingIfNotLocked() {
                 const lock = lockDB.getByGroupId(hmip_groupId);
                 continue;
             } catch (e) {
-                await this.homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
+                await homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
             }
         } catch (e) {
             console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " to " + roomConfig.desiredTemperatureIdle);
