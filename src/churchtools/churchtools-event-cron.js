@@ -60,9 +60,10 @@ async function resetEverythingIfNotLocked() {
                 continue;
             } catch (e) {
                 await homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
+                console.log("[CRON] [RESET] Successfully reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
             }
         } catch (e) {
-            console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " to " + roomConfig.desiredTemperatureIdle);
+            console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
             console.log("[ERROR] [RESET] " + e);
         }
     }
