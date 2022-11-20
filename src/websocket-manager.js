@@ -1,3 +1,4 @@
+const axios = require('axios');
 const WebSocket = require('ws');
 
 class WebsocketManager {
@@ -26,7 +27,8 @@ class WebsocketManager {
      * 
      * @param {*} callback  Callback to execute on message event
      */
-    connect = (callback) => {
+    connect = async (callback) => {
+        await this.checkServerUrl();
         this.websocket = new WebSocket(this.url, {
             headers: this.headers
         });
@@ -38,7 +40,7 @@ class WebsocketManager {
             this.initializePingInterval();
         });
 
-        this.websocket.on('close', () => {
+        this.websocket.on('close', async () => {
             console.log('[WS] Disconnected');
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
@@ -68,7 +70,7 @@ class WebsocketManager {
         if (this.websocket) {
             this.pingIntervalRef = setInterval(
                 () => {
-                    if (this.websocket) {
+                    if (this.websocket.readyState > 0) {
                         this.websocket.ping();
                     }
                 }, this.pingIntervallMilliseconds);
@@ -105,6 +107,41 @@ class WebsocketManager {
             clearInterval(this.reconnectIntervalRef);
         }
     };
+
+    async checkServerUrl() {
+        const payload = {
+            "clientCharacteristics": {
+                "apiVersion": "10",
+                "applicationIdentifier": "homematicip-python",
+                "applicationVersion": "1.0",
+                "deviceManufacturer": "none",
+                "deviceType": "Computer",
+                "language": "de-DE",
+                "osType": "Windows",
+                "osVersion": "10"
+            },
+            "id": process.env.HOMEMATIC_ACCESS_POINT_ID
+        };
+
+        const headers = {};
+
+        const url = "https://lookup.homematic.com:48335/getHost";
+
+        var response;
+        try {
+            response = await axios.post(url, payload, { headers });
+            console.log("[INFO] [WS] [URL] [OLD] " + this.url);
+            this.url = response.data["urlWebSocket"];
+            console.log("[INFO] [WS] [URL] [NEW] " + this.url);
+        } catch (e) {
+            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Could not execute API request");
+            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Reson: " + e);
+            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Payload: " + JSON.stringify(payload));
+            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] " + JSON.stringify(e.response.data));
+
+            throw Error(e);
+        }
+    }
 }
 
 module.exports = { WebsocketManager };

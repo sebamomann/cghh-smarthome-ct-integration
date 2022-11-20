@@ -55,7 +55,7 @@ async function resetEverythingIfNotLocked() {
 
         try {
             try {
-                const lockDB = new LockDB();
+                const lockDB = new LockDB(); 
                 const lock = lockDB.getByGroupId(hmip_groupId);
                 continue;
             } catch (e) {

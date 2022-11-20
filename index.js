@@ -15,6 +15,7 @@ require('dotenv').config();
  */
 const job = new CronJob(process.env.CRON_DEFINITION, async () => {
     try {
+        await checkServerUrl();
         await execute();
         pingUptime("OK");
 
@@ -40,6 +41,46 @@ const pingUptime = (message) => {
         });
 };
 
-pingUptime("OK");
-execute();
-startEventListener();
+const checkServerUrl = async () => {
+    const payload = {
+        "clientCharacteristics": {
+            "apiVersion": "10",
+            "applicationIdentifier": "homematicip-python",
+            "applicationVersion": "1.0",
+            "deviceManufacturer": "none",
+            "deviceType": "Computer",
+            "language": "de-DE",
+            "osType": "Windows",
+            "osVersion": "10"
+        },
+        "id": process.env.HOMEMATIC_ACCESS_POINT_ID
+    };
+
+    const headers = {};
+
+    const url = "https://lookup.homematic.com:48335/getHost";
+
+    var response;
+    try {
+        response = await axios.post(url, payload, { headers });
+        console.log("[INFO] [API] [URL] [OLD] " + process.env.HOMEMATIC_API_URL);
+        process.env.HOMEMATIC_API_URL = response.data["urlREST"];
+        console.log("[INFO] [API] [URL] [NEW] " + process.env.HOMEMATIC_API_URL);
+    } catch (e) {
+        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Could not execute API request");
+        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Reson: " + e);
+        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Payload: " + JSON.stringify(payload));
+        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] " + JSON.stringify(e.response.data));
+
+        throw Error(e);
+    }
+};
+
+const run = async () => {
+    pingUptime("OK");
+    await checkServerUrl();
+    execute();
+    startEventListener();
+};
+
+run();
