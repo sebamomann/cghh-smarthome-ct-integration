@@ -17,12 +17,12 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => {
     try {
         await checkServerUrl();
         await execute();
-        pingUptime("OK");
 
         if (moment().hours() === 0 && moment().minutes() === 0) {
             resetEverythingIfNotLocked();
         }
     } catch (e) {
+        pingUptime("CRON ERROR");
         console.log(e);
     }
 });
@@ -77,7 +77,6 @@ const checkServerUrl = async () => {
 };
 
 const run = async () => {
-    pingUptime("OK");
     await checkServerUrl();
     execute();
     startEventListener();

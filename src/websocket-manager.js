@@ -44,18 +44,21 @@ class WebsocketManager {
             console.log('[WS] Disconnected');
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
+            pingUptime("WEBSOCKET CONNECTION CLOSED");
         });
 
         this.websocket.on('error', (error) => {
             console.log('[WS] [Error] ' + error.message);
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
+            pingUptime("WEBSOCKET CONNECTION ERROR " + error.message);
         });
 
         this.websocket.on('unexpected-response', (error) => {
             console.log('[WS] [Error] ' + error.message);
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
+            pingUptime("WEBSOCKET CONNECTION UNEXPECTED RESPONSE " + error.message);
         });
     };
 
@@ -142,6 +145,18 @@ class WebsocketManager {
             throw Error(e);
         }
     }
+
+    pingUptime = (message) => {
+        console.log("[CRON] Sending Heartbeat");
+        let url = process.env.UPTIME_KUMA_URL + "?msg=" + message + "&ping=";
+        axios.get(url)
+            .then((response) => {
+                console.log("[CRON] Heartbeat sent to Uptime");
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
 }
 
 module.exports = { WebsocketManager };
