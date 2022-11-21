@@ -41,7 +41,7 @@ class WebsocketManager {
 
         this.websocket.on('open', () => {
             console.log("[WS] Connected");
-            Uptime.pingUptime("down", "CONNECTED", "WS");
+            Uptime.pingUptime("up", "CONNECTED", "WS");
             this.initializePingInterval();
         });
 
