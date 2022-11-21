@@ -70,6 +70,8 @@ const handleElement = (event) => {
     } else if (event.pushEventType === "HOME_CHANGED") {
         handleHomeChangeEvent(event);
     }
+
+    console.log(event.pushEventType);
 };
 
 /**
