@@ -1,5 +1,6 @@
 const axios = require('axios');
 const WebSocket = require('ws');
+const { Uptime } = require('../uptime');
 
 class WebsocketManager {
     websocket;
@@ -33,32 +34,36 @@ class WebsocketManager {
             headers: this.headers
         });
 
-        this.websocket.on('message', callback);
+        this.websocket.on('message', () => {
+            Uptime.pingUptime("up", "GOT MESSAGE", "WS");
+            callback();
+        });
 
         this.websocket.on('open', () => {
             console.log("[WS] Connected");
+            Uptime.pingUptime("down", "CONNECTED", "WS");
             this.initializePingInterval();
         });
 
         this.websocket.on('close', async () => {
             console.log('[WS] Disconnected');
+            Uptime.pingUptime("down", "DISCONNECTED", "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
-            pingUptime("WEBSOCKET CONNECTION CLOSED");
         });
 
         this.websocket.on('error', (error) => {
             console.log('[WS] [Error] ' + error.message);
+            Uptime.pingUptime("down", error.message, "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
-            pingUptime("WEBSOCKET CONNECTION ERROR " + error.message);
         });
 
         this.websocket.on('unexpected-response', (error) => {
             console.log('[WS] [Error] ' + error.message);
+            Uptime.pingUptime("down", error.message, "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
-            pingUptime("WEBSOCKET CONNECTION UNEXPECTED RESPONSE " + error.message);
         });
     };
 

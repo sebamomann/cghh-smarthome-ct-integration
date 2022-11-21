@@ -1,5 +1,6 @@
 const { execute, resetEverythingIfNotLocked } = require("./src/churchtools/churchtools-event-cron");
 const { startEventListener } = require("./src/homematic/homematic-event-listener");
+const { Uptime } = require("./uptime");
 
 const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
@@ -13,33 +14,31 @@ require('dotenv').config();
 /**
  * ENTRYPOINT
  */
-const job = new CronJob(process.env.CRON_DEFINITION, async () => {
-    try {
-        await checkServerUrl();
-        await execute();
+const job = new CronJob(process.env.CRON_DEFINITION, async () => { executeCron(); });
 
-        if (moment().hours() === 0 && moment().minutes() === 0) {
-            resetEverythingIfNotLocked();
+const executeCron = async () => {
+    var count = 0;
+    var maxTries = 3;
+    while (maxTries < 3) {
+        try {
+            await execute();
+
+            if (moment().hours() === 0 && moment().minutes() === 0) {
+                resetEverythingIfNotLocked();
+            }
+
+            Uptime.pingUptime("up", "OK", "CRON");
+            return;
+        } catch (e) {
+            await checkServerUrl();
+            if (++count == maxTries) throw e;
         }
-    } catch (e) {
-        pingUptime("CRON ERROR");
-        console.log(e);
     }
-});
+
+    Uptime.pingUptime("down", e, "CRON");
+};
 
 job.start();
-
-const pingUptime = (message) => {
-    console.log("[CRON] Sending Heartbeat");
-    let url = process.env.UPTIME_KUMA_URL + "?msg=" + message + "&ping=";
-    axios.get(url)
-        .then((response) => {
-            console.log("[CRON] Heartbeat sent to Uptime");
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-};
 
 const checkServerUrl = async () => {
     const payload = {
@@ -77,8 +76,7 @@ const checkServerUrl = async () => {
 };
 
 const run = async () => {
-    await checkServerUrl();
-    execute();
+    executeCron();
     startEventListener();
 };
 
