@@ -34,9 +34,9 @@ class WebsocketManager {
             headers: this.headers
         });
 
-        this.websocket.on('message', () => {
+        this.websocket.on('message', (data) => {
             Uptime.pingUptime("up", "GOT MESSAGE", "WS");
-            callback();
+            callback(data);
         });
 
         this.websocket.on('open', () => {
