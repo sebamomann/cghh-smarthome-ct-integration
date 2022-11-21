@@ -19,23 +19,25 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => { executeCron()
 const executeCron = async () => {
     var count = 0;
     var maxTries = 3;
-    while (maxTries < 3) {
-        try {
-            await execute();
+    try {
+        while (count < 3) {
+            try {
+                await execute();
 
-            if (moment().hours() === 0 && moment().minutes() === 0) {
-                resetEverythingIfNotLocked();
+                if (moment().hours() === 0 && moment().minutes() === 0) {
+                    resetEverythingIfNotLocked();
+                }
+
+                Uptime.pingUptime("up", "OK", "CRON");
+                return;
+            } catch (e) {
+                await checkServerUrl();
+                if (++count == maxTries) throw e;
             }
-
-            Uptime.pingUptime("up", "OK", "CRON");
-            return;
-        } catch (e) {
-            await checkServerUrl();
-            if (++count == maxTries) throw e;
         }
+    } catch (e) {
+        Uptime.pingUptime("down", e, "CRON");
     }
-
-    Uptime.pingUptime("down", e, "CRON");
 };
 
 job.start();
