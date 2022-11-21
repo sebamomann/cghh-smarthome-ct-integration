@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 class Uptime {
     static pingUptime = (status, message, subject) => {
         console.log(`[HEALTH] [${subject}] Sending ping to Uptime`);
