@@ -19,6 +19,7 @@ const { GroupStateDB } = require("../homematic/group/group-state.db");
 const { GroupState } = require("../homematic/group/group-state");
 const { RoomConfiguration } = require("../homematic/room/room-config");
 const { GroupStateBuilder } = require("../homematic/group/group-state.builder");
+const { Uptime } = require("../../uptime");
 
 
 /** ------------------- */
@@ -55,7 +56,7 @@ async function resetEverythingIfNotLocked() {
 
         try {
             try {
-                const lockDB = new LockDB(); 
+                const lockDB = new LockDB();
                 const lock = lockDB.getByGroupId(hmip_groupId);
                 continue;
             } catch (e) {
@@ -63,6 +64,7 @@ async function resetEverythingIfNotLocked() {
                 console.log("[CRON] [RESET] Successfully reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
             }
         } catch (e) {
+            Uptime.pingUptime("down", "Can not reset " + roomConfig.homematicName, "CRON");
             console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
             console.log("[ERROR] [RESET] " + e);
         }
