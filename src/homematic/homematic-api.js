@@ -60,12 +60,13 @@ class HomematicApi {
             console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] " + JSON.stringify(e.response?.data));
 
             if (attempt <= maxRetries) {
-                console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Retrying in " + attempt + " ms");
+                const retryInMs = Math.pow(5000, attempt * 0.5);
+                console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Retrying in " + retryInMs + " ms");
                 setTimeout(() => {
                     let r = (Math.random() + 1).toString(36).substring(7);
                     console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + 1 + "] [" + id + "] Retrying request");
                     this.callRest(path, payload, attempt++);
-                }, Math.pow(5000, attempt / 1.25));
+                }, retryInMs);
             } else {
                 throw Error(e);
             }
