@@ -29,7 +29,13 @@ class HomematicApi {
         });
     }
 
-    async callRest(path, payload) {
+    async callRest(path, payload, attempt = 1, id = null) {
+        if (id == null) {
+            let r = (Math.random() + 1).toString(36).substring(7);
+            id = r;
+        }
+
+        const maxRetries = 5;
         const headers = {
             "content-type": "application/json",
             "accept": "application/json",
@@ -43,14 +49,26 @@ class HomematicApi {
         var response;
         try {
             response = await axios.post(url, payload, { headers });
+            if (attempt !== 1) {
+                console.log("[SUCCESS] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Succeeded API Call");
+            }
             return response.data;
         } catch (e) {
-            console.log("[ERROR] [API CALL] [HOMEMATIC] Could not execute API request");
-            console.log("[ERROR] [API CALL] [HOMEMATIC] Reson: " + e);
-            console.log("[ERROR] [API CALL] [HOMEMATIC] Payload: " + JSON.stringify(payload));
-            console.log("[ERROR] [API CALL] [HOMEMATIC] " + JSON.stringify(e.response.data));
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Could not execute API request");
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Reson: " + e);
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Payload: " + JSON.stringify(payload));
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] " + JSON.stringify(e.response.data));
 
-            throw Error(e);
+            if (attempt <= maxRetries) {
+                console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Retrying in " + attempt + " ms");
+                setTimeout(() => {
+                    let r = (Math.random() + 1).toString(36).substring(7);
+                    console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + 1 + "] [" + id + "] Retrying request");
+                    this.callRest(path, payload, attempt++);
+                }, Math.pow(5000, attempt / 1.25));
+            } else {
+                throw Error(e);
+            }
         }
 
     }
