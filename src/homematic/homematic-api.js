@@ -55,9 +55,9 @@ class HomematicApi {
             return response.data;
         } catch (e) {
             console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Could not execute API request");
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Reson: " + e);
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Reason: " + e);
             console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Payload: " + JSON.stringify(payload));
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] " + JSON.stringify(e.response.data));
+            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] " + JSON.stringify(e.response?.data));
 
             if (attempt <= maxRetries) {
                 console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Retrying in " + attempt + " ms");
