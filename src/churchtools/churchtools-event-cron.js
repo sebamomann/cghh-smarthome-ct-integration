@@ -47,28 +47,41 @@ async function execute() {
 /**
  * If no lock exists for the room, reset it to idle
  */
-async function resetEverythingIfNotLocked() {
+async function resetEverythingIfNotLocked(earlierResetNotPossible) {
     const roomConfigs = roomConfigurationDB.getAll();
     const homematicAPI = new HomematicApi();
+    const resetNotPossible = {};
+
+    // set boolean if this reset is a retry (if ealier one reset didnt work)
+    const earlierResetNotPossibleBool = Object.keys(earlierResetNotPossible).length >= 0;
 
     for (const roomConfig of roomConfigs) {
         const hmip_groupId = roomConfig.homematicId;
+
+        // dont reset, if previous reset worked
+        if (earlierResetNotPossibleBool && earlierResetNotPossible[hmip_groupId] === undefined) {
+            continue;
+        }
 
         try {
             try {
                 const lockDB = new LockDB();
                 const lock = lockDB.getByGroupId(hmip_groupId);
-                continue;
+                continue; // element is locked - dont reset
             } catch (e) {
                 await homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
                 console.log("[CRON] [RESET] Successfully reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
+                delete resetNotPossible[hmip_groupId];
             }
         } catch (e) {
             Uptime.pingUptime("down", "Can not reset " + roomConfig.homematicName, "CRON");
             console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
             console.log("[ERROR] [RESET] " + e);
+            resetNotPossible[hmip_groupId] = true;
         }
     }
+
+    return resetNotPossible;
 }
 
 /**
