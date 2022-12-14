@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { InfluxDBManager } = require("../influx/influx-db");
 
 require('dotenv').config();
 
