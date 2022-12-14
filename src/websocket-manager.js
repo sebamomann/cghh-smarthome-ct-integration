@@ -1,6 +1,7 @@
 const axios = require('axios');
 const WebSocket = require('ws');
 const { Uptime } = require('../uptime');
+const { InfluxDBManager } = require('./influx/influx-db');
 
 class WebsocketManager {
     websocket;
