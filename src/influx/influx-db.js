@@ -1,6 +1,8 @@
 const { InfluxDB } = require('@influxdata/influxdb-client');
 const { Point } = require('@influxdata/influxdb-client');
 const { GroupState } = require('./../homematic/group/group-state');
+const moment = require('moment-timezone');
+moment.tz.setDefault("Europe/Berlin");
 
 class InfluxDBManager {
     org = process.env.INFLUX_ORG;
