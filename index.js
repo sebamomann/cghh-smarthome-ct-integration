@@ -6,6 +6,7 @@ const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
 
 const axios = require('axios');
+const { InfluxDBManager } = require("./src/influx/influx-db");
 
 const CronJob = require('cron').CronJob;
 
@@ -49,7 +50,10 @@ const executeCron = async () => {
 
 job.start();
 
+// AUSLAGERN
 const checkServerUrl = async () => {
+    const influxDb = new InfluxDBManager();
+
     const payload = {
         "clientCharacteristics": {
             "apiVersion": "10",
@@ -71,14 +75,15 @@ const checkServerUrl = async () => {
     var response;
     try {
         response = await axios.post(url, payload, { headers });
-        console.log("[INFO] [API] [URL] [OLD] " + process.env.HOMEMATIC_API_URL);
+        influxDb.sendLog({ tags: { status: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
         process.env.HOMEMATIC_API_URL = response.data["urlREST"];
-        console.log("[INFO] [API] [URL] [NEW] " + process.env.HOMEMATIC_API_URL);
+        influxDb.sendLog({ tags: { status: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "New URL: " + process.env.HOMEMATIC_API_URL });
     } catch (e) {
-        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Could not execute API request");
-        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Reson: " + e);
-        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Payload: " + JSON.stringify(payload));
-        console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] " + JSON.stringify(e.response.data));
+        const tags = { status: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
+        influxDb.sendLog({ tags, message: "Could not execute API request" });
+        influxDb.sendLog({ tags, message: "Reason: " + e });
+        influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
+        influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
 
         throw Error(e);
     }

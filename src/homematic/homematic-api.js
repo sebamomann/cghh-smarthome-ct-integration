@@ -7,6 +7,7 @@ class HomematicApi {
     ACCES_POINT_ID = process.env.HOMEMATIC_ACCESS_POINT_ID;
     AUTHTOKEN = process.env.HOMEMATIC_API_AUTHTOKEN;
     CLIENTAUTH = process.env.HOMEMATIC_API_CLIENTAUTH;
+    influxDb = new InfluxDBManager();
 
     constructor() {
 
@@ -54,17 +55,18 @@ class HomematicApi {
             }
             return response.data;
         } catch (e) {
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Could not execute API request");
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Reason: " + e);
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Payload: " + JSON.stringify(payload));
-            console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] " + JSON.stringify(e.response?.data));
+            const tags = { status: "ERROR", module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
+            influxDb.sendLog({ tags, message: "Could not execute API request" });
+            influxDb.sendLog({ tags, message: "Reason: " + e });
+            influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
+            influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
 
             if (attempt <= maxRetries) {
                 const retryInMs = Math.pow(5000, attempt * 0.5);
-                console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Retrying in " + retryInMs + " ms");
+                influxDb.sendLog({ tags, message: "Retrying in " + retryInMs + " ms" });
                 setTimeout(() => {
                     let r = (Math.random() + 1).toString(36).substring(7);
-                    console.log("[ERROR] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + 1 + "] [" + id + "] Retrying request");
+                    influxDb.sendLog({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" });
                     this.callRest(path, payload, attempt++);
                 }, retryInMs);
             } else {

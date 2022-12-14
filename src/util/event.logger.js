@@ -7,7 +7,9 @@ moment.tz.setDefault("Europe/Berlin");
 class EventLogger {
 
     static startCron() {
-        console.log(`[${this.t()}] [CRON] Executing`);
+        const influxDb = new InfluxDBManager();
+        const tags = { status: "INFO", module: "CRON", function: "START" };
+        influxDb.sendLog({ tags, message: "Starting Cronjob" });
     }
 
     /**

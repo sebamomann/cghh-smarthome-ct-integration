@@ -39,6 +39,23 @@ class InfluxDBManager {
         }
     }
 
+    async sendLog(data) {
+        const writeApi = this.influx.getWriteApi(this.org, "logs");
+        writeApi.useDefaultTags(data.tags ? data.tags : {});
+
+        const point = new Point("Default Log");
+        point.stringField("log", data.message);
+        writeApi.writePoint(point);
+
+        console.log(`[${this.t()}] ${JSON.stringify(data.tags)} ${data.message}`);
+
+        try {
+            await writeApi.close();
+        } catch (e) {
+            console.log("[INFLUX] [ERROR] " + e);
+        }
+    }
+
     async sendGenericInformation(data, bucket) {
         const writeApi = this.influx.getWriteApi(this.org, bucket);
 

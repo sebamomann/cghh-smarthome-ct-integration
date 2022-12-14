@@ -117,6 +117,8 @@ class WebsocketManager {
     };
 
     async checkServerUrl() {
+        const influxDb = new InfluxDBManager();
+
         const payload = {
             "clientCharacteristics": {
                 "apiVersion": "10",
@@ -142,10 +144,11 @@ class WebsocketManager {
             this.url = response.data["urlWebSocket"];
             console.log("[INFO] [WS] [URL] [NEW] " + this.url);
         } catch (e) {
-            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Could not execute API request");
-            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Reson: " + e);
-            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] Payload: " + JSON.stringify(payload));
-            console.log("[ERROR] [API CALL] [HOMEMATIC LOOKUP] " + JSON.stringify(e.response.data));
+            const tags = { status: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
+            influxDb.sendLog({ tags, message: "Could not execute API request" });
+            influxDb.sendLog({ tags, message: "Reason: " + e });
+            influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
+            influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
 
             throw Error(e);
         }
