@@ -75,11 +75,11 @@ const checkServerUrl = async () => {
     var response;
     try {
         response = await axios.post(url, payload, { headers });
-        influxDb.sendLog({ tags: { status: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
+        influxDb.sendLog({ tags: { level: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
         process.env.HOMEMATIC_API_URL = response.data["urlREST"];
-        influxDb.sendLog({ tags: { status: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "New URL: " + process.env.HOMEMATIC_API_URL });
+        influxDb.sendLog({ tags: { level: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "New URL: " + process.env.HOMEMATIC_API_URL });
     } catch (e) {
-        const tags = { status: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
+        const tags = { level: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
         influxDb.sendLog({ tags, message: "Could not execute API request" });
         influxDb.sendLog({ tags, message: "Reason: " + e });
         influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });

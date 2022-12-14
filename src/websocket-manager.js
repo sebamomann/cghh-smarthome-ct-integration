@@ -145,7 +145,7 @@ class WebsocketManager {
             this.url = response.data["urlWebSocket"];
             console.log("[INFO] [WS] [URL] [NEW] " + this.url);
         } catch (e) {
-            const tags = { status: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
+            const tags = { level: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
             influxDb.sendLog({ tags, message: "Could not execute API request" });
             influxDb.sendLog({ tags, message: "Reason: " + e });
             influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });

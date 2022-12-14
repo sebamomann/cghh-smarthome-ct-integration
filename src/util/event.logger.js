@@ -8,7 +8,7 @@ class EventLogger {
 
     static startCron() {
         const influxDb = new InfluxDBManager();
-        const tags = { status: "INFO", module: "CRON", function: "START" };
+        const tags = { level: "INFO", module: "CRON", function: "START" };
         influxDb.sendLog({ tags, message: "Starting Cronjob" });
     }
 

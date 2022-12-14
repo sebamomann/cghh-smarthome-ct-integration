@@ -55,7 +55,7 @@ class HomematicApi {
             }
             return response.data;
         } catch (e) {
-            const tags = { status: "ERROR", module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
+            const tags = { level: "ERROR", module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
             influxDb.sendLog({ tags, message: "Could not execute API request" });
             influxDb.sendLog({ tags, message: "Reason: " + e });
             influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
