@@ -129,6 +129,8 @@ async function manageLockForRoom(roomConfig) {
         const lockDB = new LockDB();
         lock = lockDB.getByGroupId(hmip_groupId);
     } catch (e) {
+        // element is not locked
+        // nothing to do (no resolve needed)
         return;
     }
 
@@ -136,11 +138,15 @@ async function manageLockForRoom(roomConfig) {
         const groupStateDB = new GroupStateDB();
         const groupState = groupStateDB.getById(hmip_groupId);
         const groupManager = new GroupManager(groupState.id, roomConfig, groupState);
-        await groupManager.setToIdle(lock.eventName);
-        const lockDB = new LockDB();
-        lockDB.delete(lock);
+        try {
+            await groupManager.setToIdle(lock.eventName);
+            const lockDB = new LockDB();
+            lockDB.delete(lock);
 
-        EventLogger.resolveLock(groupState.label, roomConfig.desiredTemperatureIdle, lock);
+            EventLogger.resolveLock(groupState.label, roomConfig.desiredTemperatureIdle, lock);
+        } catch (e) {
+            console.log("[ERROR] [IDLE] Cannot set group " + groupState.id + " to IDLE - retry next time");
+        }
     }
 }
 

@@ -38,6 +38,7 @@ class GroupManager {
 
             // revert pending
             pendingLogsManager.setPendingForGroupId(this.groupId, false, null);
+            throw new Error("Cannot set Temperature to idle");
         }
     }
 

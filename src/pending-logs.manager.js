@@ -3,6 +3,10 @@ const fse = require("fs-extra");
 
 const FILE_NAME = process.cwd() + "/persistent/pendingLogs.json";
 
+/**
+ * Pending means, that a automatic change has been made
+ * If websocket is triggered and pendigLog == true -> log as automatic change
+ */
 class PendingLogsManager {
 
     constructor() {
