@@ -240,6 +240,10 @@ const handleBookingOfEventHeating = async (event, booking) => {
     const calculatedTimeIsOverdue = calculatedTimeToStartHeating.isBefore(moment());
     const eventAlreadyStarted = moment(event.startdate).isBefore(moment());
 
+    var now = moment(new Date());
+    var duration = moment.duration(now.diff(calculatedTimeToStartHeating));
+    var minutes = duration.asMinutes();
+
     if (calculatedTimeIsOverdue || eventAlreadyStarted) {
         try {
             const groupManager = new GroupManager(groupState.id, roomConfiguration, groupState);
@@ -261,7 +265,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
         }
     } else {
         const tags = { module: "CRON", function: "EVENT", group: groupState.label.replace(/ /g, '_') };
-        const message = `Event ${event.bezeichnung} lies too far in the future. Minutes needed: ${minutesNeededToReachDesiredTemperature} - IGNORE`;
+        const message = `Event ${event.bezeichnung} lies too far in the future. Minutes needed: ${minutesNeededToReachDesiredTemperature} - Starting to heat in approx ${minutes} minutes`;
         Logger.debug({ tags, message });
     }
 };
