@@ -1,4 +1,4 @@
-export class Logger {
+class Logger {
 
     static core(data) {
         Logger.log("CORE", data.tags, data.message);
@@ -35,3 +35,5 @@ export class Logger {
         influxDb.sendLog({ tags, message });
     }
 }
+
+module.exports = { Logger };
