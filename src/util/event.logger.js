@@ -20,13 +20,13 @@ class EventLogger {
     }
 
     static groupUpdatePreheat(roomName, desiredTemperature, event) {
-        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label.replace(/ /g, '_') };
+        const tags = { module: "CRON", function: "EXECUTE", group: roomName.replace(/ /g, '_') };
         const message = `[+] ${roomName} to ${desiredTemperature} for ${event.bezeichnung} ending at ${this.ft(event.startdate)}`;
         Logger.core({ tags, message });
     }
 
     static groupUpdatePreheatBlocked(eventName, roomName) {
-        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label.replace(/ /g, '_') };
+        const tags = { module: "CRON", function: "EXECUTE", group: roomName.replace(/ /g, '_') };
         const message = `[#] ${roomName} preheating is blocked for event ${eventName} due to current manual override`;
         Logger.core({ tags, message });
     }
