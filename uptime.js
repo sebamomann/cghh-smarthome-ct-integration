@@ -5,7 +5,7 @@ class Uptime {
     static pingUptime = (status, message, subject) => {
         let url = `${subject == "CRON" ? process.env.UPTIME_KUMA_CRON_URL : process.env.UPTIME_KUMA_WS_URL}?status=${status}&msg=${message}&ping=`;
 
-        var tags = { module: "HEALTH", function: "UPTIME", status };
+        var tags = { module: "HEALTH", function: "UPTIME", status, subject };
         axios.get(url)
             .then((response) => {
                 Logger.debug({ tags, message: "Ping sent to uptime" });
