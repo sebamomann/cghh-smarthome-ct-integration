@@ -1,4 +1,5 @@
 const moment = require('moment-timezone');
+const { InfluxDBManager } = require('../influx/influx-db');
 moment.tz.setDefault("Europe/Berlin");
 
 class Logger {
