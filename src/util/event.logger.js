@@ -14,19 +14,19 @@ class EventLogger {
     }
 
     static resolveLock(groupState, desiredTemperature, lock) {
-        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label.replace(/ /g, '_') };
         const message = `[-] ${groupState.label} to ${desiredTemperature} for ${lock.eventName} ending at ${this.ft(lock.expiring)}`;
         Logger.core({ tags, message });
     }
 
     static groupUpdatePreheat(roomName, desiredTemperature, event) {
-        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label.replace(/ /g, '_') };
         const message = `[+] ${roomName} to ${desiredTemperature} for ${event.bezeichnung} ending at ${this.ft(event.startdate)}`;
         Logger.core({ tags, message });
     }
 
     static groupUpdatePreheatBlocked(eventName, roomName) {
-        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label.replace(/ /g, '_') };
         const message = `[#] ${roomName} preheating is blocked for event ${eventName} due to current manual override`;
         Logger.core({ tags, message });
     }

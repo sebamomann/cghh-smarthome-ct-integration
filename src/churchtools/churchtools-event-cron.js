@@ -62,7 +62,7 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
             continue;
         }
 
-        var tags = { module: "CRON", function: "RESET", group: hmip_groupId };
+        var tags = { module: "CRON", function: "RESET", group: roomConfig.name.replace(/ /g, '_') };
         try {
             try {
                 const lockDB = new LockDB();
@@ -127,7 +127,7 @@ async function manageLocks() {
  */
 async function manageLockForRoom(roomConfig) {
     const hmip_groupId = roomConfig.homematicId;
-    var tags = { module: "CRON", function: "LOCKS", group: roomConfig.homematicId };
+    var tags = { module: "CRON", function: "LOCKS", group: roomConfig.name.replace(/ /g, '_') };
 
     /** @type {Lock} */
     var lock;
@@ -214,7 +214,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
 
     try {
         lockDB.getByGroupId(roomConfiguration.homematicId);
-        var tags = { module: "CRON", function: "EVENT", group: roomConfiguration };
+        var tags = { module: "CRON", function: "EVENT", group: roomConfiguration.name.replace(/ /g, '_') };
         Logger.debug({ tags, message: `${roomConfiguration.name} is locked - SKIP` });
         return; // room locked - stop
     } catch (e) {
@@ -259,7 +259,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
             EventLogger.groupUpdatePreheatBlocked(event.bezeichnung, groupState.label);
         }
     } else {
-        const tags = { module: "CRON", function: "EVENT", group: groupState.label };
+        const tags = { module: "CRON", function: "EVENT", group: groupState.label.replace(/ /g, '_') };
         const message = `Event ${event.bezeichnung} lies too far in the future. Minutes needed: ${minutesNeededToReachDesiredTemperature} - IGNORE`;
         Logger.debug({ tags, message });
     }
