@@ -8,7 +8,7 @@ class Uptime {
         var tags = { module: "HEALTH", function: "UPTIME", status };
         axios.get(url)
             .then((response) => {
-                Logger.info({ tags, message: "Ping sent to uptime" });
+                Logger.debug({ tags, message: "Ping sent to uptime" });
             })
             .catch((err) => {
                 Logger.error({ tags, message: "Could not send status to Uptime: " + err });
