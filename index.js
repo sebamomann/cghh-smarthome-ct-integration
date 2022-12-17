@@ -57,9 +57,7 @@ const executeCron = async () => {
 
     const tags = { module: "CRON", function: "EXECUTE" };
     try {
-        Logger.info({ tags, message: "Starting event handling" });
         await execute();
-        Logger.info({ tags, message: "Finished event handling" });
         Uptime.pingUptime("up", "OK", "CRON");
     } catch (e) {
         Logger.error({ tags, message: "Failed event handling: " + e });
