@@ -36,9 +36,9 @@ var roomConfigurationDB;
  * Initialize run for heating adjustment
  */
 async function execute() {
+    roomConfigurationDB = new RoomConfigurationDB();
     await manageLocks();
 
-    roomConfigurationDB = new RoomConfigurationDB();
     const events = await getEvents();
     handleEvents(events);
 }
