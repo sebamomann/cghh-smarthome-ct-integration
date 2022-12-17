@@ -20,6 +20,7 @@ const { GroupState } = require("../homematic/group/group-state");
 const { RoomConfiguration } = require("../homematic/room/room-config");
 const { GroupStateBuilder } = require("../homematic/group/group-state.builder");
 const { Uptime } = require("../../uptime");
+const { Logger } = require("../util/logger");
 
 
 /** ------------------- */
@@ -35,12 +36,10 @@ var roomConfigurationDB;
  * Initialize run for heating adjustment
  */
 async function execute() {
-    EventLogger.startCron();
+    await manageLocks();
 
     roomConfigurationDB = new RoomConfigurationDB();
     const events = await getEvents();
-
-    await manageLocks();
     handleEvents(events);
 }
 
@@ -63,20 +62,21 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
             continue;
         }
 
+        var tags = { module: "CRON", function: "RESET", group: hmip_groupId };
         try {
             try {
                 const lockDB = new LockDB();
                 const lock = lockDB.getByGroupId(hmip_groupId);
+                Logger.warn({ tags, message: `Room reset not possible - LOCKED` });
                 continue; // element is locked - dont reset
             } catch (e) {
                 await homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
-                console.log("[CRON] [RESET] Successfully reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
+                Logger.debug({ tags, message: `Room reset successful` });
                 delete resetNotPossible[hmip_groupId];
             }
         } catch (e) {
             Uptime.pingUptime("down", "Can not reset " + roomConfig.homematicName, "CRON");
-            console.log("[ERROR] [RESET] could not reset hmip_group " + hmip_groupId + " (" + roomConfig.homematicName + ") to " + roomConfig.desiredTemperatureIdle);
-            console.log("[ERROR] [RESET] " + e);
+            Logger.error({ tags, message: `Room reset not possible: ${e}` });
             resetNotPossible[hmip_groupId] = true;
         }
     }
@@ -93,11 +93,15 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
  * @returns void
  */
 const handleEvents = (events) => {
+    var tags = { module: "CRON", function: "EVENT" };
+    Logger.info({ tags, message: "Start event handling" });
     const filteredEvents = filterEventsThatDidNotStartYetOrAreCurrentlyActive(events);
 
     filteredEvents.forEach(event => {
         handleEventForHeatingAdjustment(event);
     });
+
+    Logger.info({ tags, message: "Finished event handling" });
 };
 
 /**
@@ -111,6 +115,8 @@ const handleEvents = (events) => {
 async function manageLocks() {
     const roomConfigs = roomConfigurationDB.getAll();
 
+    var tags = { module: "CRON", function: "LOCKS" };
+    Logger.debug({ tags, message: "Resolving locks" });
     for (const roomConfig of roomConfigs) {
         await manageLockForRoom(roomConfig);
     }
@@ -121,6 +127,7 @@ async function manageLocks() {
  */
 async function manageLockForRoom(roomConfig) {
     const hmip_groupId = roomConfig.homematicId;
+    var tags = { module: "CRON", function: "LOCKS", group: roomConfig.homematicId };
 
     /** @type {Lock} */
     var lock;
@@ -128,24 +135,30 @@ async function manageLockForRoom(roomConfig) {
     try {
         const lockDB = new LockDB();
         lock = lockDB.getByGroupId(hmip_groupId);
+        Logger.debug({ tags, message: "Room locked" });
     } catch (e) {
+        Logger.debug({ tags, message: "Room not locked - SKIP" });
         // element is not locked
         // nothing to do (no resolve needed)
         return;
     }
 
     if (lock.isExpired()) {
+        Logger.debug({ tags, message: "Room lock expired" });
         const groupStateDB = new GroupStateDB();
         const groupState = groupStateDB.getById(hmip_groupId);
         const groupManager = new GroupManager(groupState.id, roomConfig, groupState);
+
         try {
+            Logger.debug({ tags, message: "Room lock expired" });
             await groupManager.setToIdle(lock.eventName);
             const lockDB = new LockDB();
             lockDB.delete(lock);
 
-            EventLogger.resolveLock(groupState.label, roomConfig.desiredTemperatureIdle, lock);
+            EventLogger.resolveLock(groupState, roomConfig.desiredTemperatureIdle, lock);
         } catch (e) {
-            console.log("[ERROR] [IDLE] Cannot set group " + groupState.id + " to IDLE - retry next time");
+            Logger.error({ tags, message: "Can't set temperature back to IDLE" });
+            throw Error("Cannnot set room to idle");
         }
     }
 }
@@ -156,12 +169,19 @@ async function manageLockForRoom(roomConfig) {
  * @returns void
  */
 const handleEventForHeatingAdjustment = (event) => {
+    var tags = { module: "CRON", function: "EVENT" };
+    Logger.debug({ tags, message: `Handling event ${event.bezeichnung}` });
+
     const bookings = event.bookings;
 
-    if (!bookings) return;
+    if (!bookings) {
+        Logger.debug({ tags, message: `Event has no bookings` });
+        return;
+    }
 
     const bookingKeys = Object.keys(bookings);
 
+    Logger.debug({ tags, message: `Event has ${bookingKeys.length} bookings` });
     bookingKeys.forEach(bookingKey => {
         const booking = bookings[bookingKey];
         handleBookingOfEventHeating(event, booking);
@@ -186,14 +206,16 @@ const handleBookingOfEventHeating = async (event, booking) => {
     try {
         roomConfiguration = roomConfigurationDB.getByChurchtoolsId(booking.resource_id);
     } catch (e) {
-        console.log("[CONFIG] [ERROR] Room not found by CT ID: " + booking.resource_id);
+        Logger.debug({ tags: { module: "CONFIG" }, message: `Booked resource with id ${booking.resource_id} does not exist in HMIP` });
         return;
-    }
+    };
 
     const lockDB = new LockDB();
 
     try {
         lockDB.getByGroupId(roomConfiguration.homematicId);
+        var tags = { module: "CRON", function: "EVENT", group: roomConfiguration };
+        Logger.debug({ tags, message: `${roomConfiguration.name} is locked - SKIP` });
         return; // room locked - stop
     } catch (e) {
         // no locks, all good;

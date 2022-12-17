@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { InfluxDBManager } = require("../influx/influx-db");
+const { Logger } = require("../util/logger");
 
 require('dotenv').config();
 
@@ -25,6 +26,8 @@ class HomematicApi {
      * @returns 
      */
     async setTemperatureForGroup(groupId, desiredTemperature) {
+        const tags = { module: "API", function: "HOMEMATIC", group: groupId };
+        Logger.debug({ tags, message: `Set temperature of ${groupId} to ${desiredTemperature}` });
         return await this.callRest("group/heating/setSetPointTemperature", {
             "groupId": groupId,
             "setPointTemperature": desiredTemperature
@@ -49,28 +52,27 @@ class HomematicApi {
         const url = this.API_URL + "hmip/" + path;
 
         var response;
+        var tags = { module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path, request: JSON.stringify(payload) };
         try {
             response = await axios.post(url, payload, { headers });
-            if (attempt !== 1) {
-                console.log("[SUCCESS] [API CALL] [HOMEMATIC] [ATTEMPT " + attempt + "] [" + id + "] Succeeded API Call");
-            }
+            Logger.debug({ tags, message: "Api call succeeded" });
+
             return response.data;
         } catch (e) {
-            const tags = { level: "ERROR", module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
-            influxDb.sendLog({ tags, message: "Could not execute API request" });
-            influxDb.sendLog({ tags, message: "Reason: " + e });
-            influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
-            influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
+            tags = { ...tags, response: JSON.stringify(e.response?.data) };
 
             if (attempt <= maxRetries) {
                 const retryInMs = Math.pow(5000, attempt * 0.5);
-                influxDb.sendLog({ tags, message: "Retrying in " + retryInMs + " ms" });
+
+                Logger.warning({ tags, message: "Could not execute API request: " + e });
+                Logger.warning({ tags, message: "Retrying in " + retryInMs + " ms" });
+
                 setTimeout(() => {
-                    let r = (Math.random() + 1).toString(36).substring(7);
-                    influxDb.sendLog({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" });
+                    Logger.warning({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" });
                     this.callRest(path, payload, attempt++);
                 }, retryInMs);
             } else {
+                Logger.error({ tags, message: "Could not execute API request: " + e });
                 throw Error(e);
             }
         }

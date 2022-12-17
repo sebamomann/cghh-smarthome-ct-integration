@@ -6,7 +6,7 @@ const moment = require('moment-timezone');
 moment.tz.setDefault("Europe/Berlin");
 
 const axios = require('axios');
-const { InfluxDBManager } = require("./src/influx/influx-db");
+const { Logger } = require("./src/util/logger");
 
 const CronJob = require('cron').CronJob;
 
@@ -18,42 +18,59 @@ require('dotenv').config();
 const job = new CronJob(process.env.CRON_DEFINITION, async () => { executeCron(); });
 
 const executeCron = async () => {
-    var count = 0;
+    const generalTags = { module: "CRON", function: "GENERAL" };
+    Logger.info({ generalTags, message: "Starting Cronjob" });
+
+    var count = 1;
     var maxTries = 3;
     var resetNotPossible = {};
 
-    while (count < maxTries) {
-        try {
-            await execute();
+    // try reset if failed ealryer
+    // or its 0 o'clock
+    if (moment().hours() === 0 && moment().minutes() === 0 || Object.keys(resetNotPossible).length > 0) {
+        var resetTags = { module: "CRON", function: "RESET", count };
+        Logger.info({ resetTags, message: "Starting nightly reset" });
 
-            // try reset if failed ealryer
-            // or its 0 o'clock
-            if (moment().hours() === 0 && moment().minutes() === 0 || Object.keys(resetNotPossible).length > 0) {
-                resetNotPossible = resetEverythingIfNotLocked(resetNotPossible);
+        while (count <= maxTries) {
+            try {
+                resetNotPossible = await resetEverythingIfNotLocked(resetNotPossible);
+
                 if (Object.keys(resetNotPossible).length > 0) {
-                    throw new Error("Cant reset " + Object.keys(resetNotPossible).length + " elements");
+                    throw new Error(`Cant reset ${Object.keys(resetNotPossible).length} elements`); // gets catched directly
                 }
+
+                Logger.info({ resetTags, message: "Finished nightly reset" });
+            } catch (e) {
+                if (count == maxTries) {
+                    Logger.error({ resetTags, message: e.message });
+                    Uptime.pingUptime("down", e, "CRON");
+                    break;
+                } else {
+                    Logger.warn({ resetTags, message: e.message });
+                }
+
+                await checkServerUrl();
+                count++;
             }
-
-            console.log("[CRON] Success");
-
-            Uptime.pingUptime("up", "OK", "CRON");
-            return;
-        } catch (e) {
-            await checkServerUrl();
-            count++;
         }
     }
 
-    Uptime.pingUptime("down", e, "CRON");
+    const tags = { module: "CRON", function: "EXECUTE" };
+    try {
+        Logger.info({ tags, message: "Starting event handling" });
+        await execute();
+        Logger.info({ tags, message: "Finished event handling" });
+        Uptime.pingUptime("up", "OK", "CRON");
+    } catch (e) {
+        Logger.error({ tags, message: "Failed event handling: " + e });
+        Uptime.pingUptime("down", e, "CRON");
+    }
 };
 
 job.start();
 
 // AUSLAGERN
 const checkServerUrl = async () => {
-    const influxDb = new InfluxDBManager();
-
     const payload = {
         "clientCharacteristics": {
             "apiVersion": "10",
@@ -73,17 +90,15 @@ const checkServerUrl = async () => {
     const url = "https://lookup.homematic.com:48335/getHost";
 
     var response;
+    var tags = { module: "API", function: "HOMEMATIC LOOKUP" };
     try {
         response = await axios.post(url, payload, { headers });
-        influxDb.sendLog({ tags: { level: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
+        Logger.warning({ tags, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
+        Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] });
         process.env.HOMEMATIC_API_URL = response.data["urlREST"];
-        influxDb.sendLog({ tags: { level: "INFO", module: "API", function: "HOMEMATIC LOOKUP" }, message: "New URL: " + process.env.HOMEMATIC_API_URL });
     } catch (e) {
-        const tags = { level: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
-        influxDb.sendLog({ tags, message: "Could not execute API request" });
-        influxDb.sendLog({ tags, message: "Reason: " + e });
-        influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
-        influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
+        tags = { ...tags, path: "/getHost", request: JSON.stringify(payload), response: JSON.stringify(e.response?.data) };
+        Logger.error({ tags, message: "Could not execute API request: " + e });
 
         throw Error(e);
     }

@@ -1,16 +1,17 @@
 const axios = require('axios');
+const { Logger } = require('./src/util/logger');
 
 class Uptime {
     static pingUptime = (status, message, subject) => {
-        console.log(`[HEALTH] [${subject}] Sending ping to Uptime`);
         let url = `${subject == "CRON" ? process.env.UPTIME_KUMA_CRON_URL : process.env.UPTIME_KUMA_WS_URL}?status=${status}&msg=${message}&ping=`;
+
+        var tags = { module: "HEALTH", function: "UPTIME", status };
         axios.get(url)
             .then((response) => {
-                console.log(`[HEALTH] [${subject}] Ping sent to Uptime`);
+                Logger.info({ tags, message: "Ping sent to uptime" });
             })
             .catch((err) => {
-                console.log(`[HEALTH] [${subject}] [ERROR] Could not send ping to Uptime`);
-                console.log(`[HEALTH] [${subject}] [ERROR] ${err}`);
+                Logger.error({ tags, message: "Could not send status to Uptime: " + err });
             });
     };
 }

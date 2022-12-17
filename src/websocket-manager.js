@@ -1,7 +1,7 @@
 const axios = require('axios');
 const WebSocket = require('ws');
 const { Uptime } = require('../uptime');
-const { InfluxDBManager } = require('./influx/influx-db');
+const { Logger } = require('./util/logger');
 
 class WebsocketManager {
     websocket;
@@ -30,6 +30,8 @@ class WebsocketManager {
      * @param {*} callback  Callback to execute on message event
      */
     connect = async (callback) => {
+        var tags = { module: "WS" };
+
         await this.checkServerUrl();
         this.websocket = new WebSocket(this.url, {
             headers: this.headers
@@ -41,27 +43,27 @@ class WebsocketManager {
         });
 
         this.websocket.on('open', () => {
-            console.log("[WS] Connected");
+            Logger.info({ tags, message: "Connected" });
             Uptime.pingUptime("up", "CONNECTED", "WS");
             this.initializePingInterval();
         });
 
         this.websocket.on('close', async () => {
-            console.log('[WS] Disconnected');
+            Logger.warning({ tags, message: "Disconnected" });
             Uptime.pingUptime("down", "DISCONNECTED", "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
         });
 
         this.websocket.on('error', (error) => {
-            console.log('[WS] [Error] ' + error.message);
+            Logger.warning({ tags, message: error.message });
             Uptime.pingUptime("down", error.message, "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
         });
 
         this.websocket.on('unexpected-response', (error) => {
-            console.log('[WS] [Error] ' + error.message);
+            Logger.warning({ tags, message: error.message });
             Uptime.pingUptime("down", error.message, "WS");
             this.clearPingInterval();
             this.initializeReconnectInterval(callback);
@@ -118,8 +120,6 @@ class WebsocketManager {
     };
 
     async checkServerUrl() {
-        const influxDb = new InfluxDBManager();
-
         const payload = {
             "clientCharacteristics": {
                 "apiVersion": "10",
@@ -139,21 +139,19 @@ class WebsocketManager {
         const url = "https://lookup.homematic.com:48335/getHost";
 
         var response;
+        var tags = { module: "API", function: "HOMEMATIC LOOKUP" };
         try {
             response = await axios.post(url, payload, { headers });
-            console.log("[INFO] [WS] [URL] [OLD] " + this.url);
-            this.url = response.data["urlWebSocket"];
-            console.log("[INFO] [WS] [URL] [NEW] " + this.url);
+            Logger.warning({ tags, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
+            Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] });
+            process.env.HOMEMATIC_API_URL = response.data["urlREST"];
         } catch (e) {
-            const tags = { level: "ERROR", module: "API", function: "HOMEMATIC LOOKUP", path: "/getHost" };
-            influxDb.sendLog({ tags, message: "Could not execute API request" });
-            influxDb.sendLog({ tags, message: "Reason: " + e });
-            influxDb.sendLog({ tags, message: "Payload: " + JSON.stringify(payload) });
-            influxDb.sendLog({ tags, message: JSON.stringify(e.response?.data) });
+            tags = { ...tags, path: "/getHost", request: JSON.stringify(payload), response: JSON.stringify(e.response?.data) };
+            Logger.error({ tags, message: "Could not execute API request: " + e });
 
             throw Error(e);
         }
-    }
+    };
 }
 
 module.exports = { WebsocketManager };

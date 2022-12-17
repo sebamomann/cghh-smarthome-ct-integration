@@ -1,7 +1,7 @@
-const { currentTime } = require('@influxdata/influxdb-client');
 const moment = require('moment-timezone');
 const { InfluxDBManager } = require('../influx/influx-db');
 const { PendingLogsManager } = require('../pending-logs.manager');
+const { Logger } = require('./logger');
 moment.tz.setDefault("Europe/Berlin");
 
 class EventLogger {
@@ -19,35 +19,22 @@ class EventLogger {
         console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [+] Preheating takes ~ ${Math.round(minutes)} minutes (incl. ${minpreOfBooking} min booking offset)`);
     }
 
-    static resolveLock(groupName, desiredTemperature, lock) {
-        const values = [
-            groupName,
-            desiredTemperature,
-            lock.eventName,
-            this.ft(lock.expiring)
-        ];
-
-        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [-] %s to %d for %s ending at %s`, ...values);
+    static resolveLock(groupState, desiredTemperature, lock) {
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const message = `[-] ${groupState.label} to ${desiredTemperature} for ${lock.eventName} ending at ${this.ft(lock.expiring)}`;
+        Logger.core({ tags, message });
     }
 
     static groupUpdatePreheat(roomName, desiredTemperature, event) {
-        const values = [
-            roomName,
-            desiredTemperature,
-            event.bezeichnung,
-            event.startdate
-        ];
-
-        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [+] %s to %d for %s starting at %s`, ...values);
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const message = `[+] ${roomName} to ${desiredTemperature} for ${event.bezeichnung} ending at ${this.ft(event.startdate)}`;
+        Logger.core({ tags, message });
     }
 
     static groupUpdatePreheatBlocked(eventName, roomName) {
-        const values = [
-            roomName,
-            eventName,
-        ];
-
-        console.log(`[${this.t()}] [CRON] [ROOM UPDATE] [#] %s preheating is blocked for event '%s' due to current manual override`, ...values);
+        const tags = { module: "CRON", function: "EXECUTE", group: groupState.label };
+        const message = `[#] ${roomName} preheating is blocked for event ${eventName} due to current manual override`;
+        Logger.core({ tags, message });
     }
 
     /**

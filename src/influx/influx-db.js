@@ -49,8 +49,6 @@ class InfluxDBManager {
         point.stringField("log", data.message);
         writeApi.writePoint(point);
 
-        console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] ${JSON.stringify(data.tags)} ${data.message}`);
-
         try {
             await writeApi.close();
         } catch (e) {
