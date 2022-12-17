@@ -241,7 +241,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
     const eventAlreadyStarted = moment(event.startdate).isBefore(moment());
 
     var now = moment(new Date());
-    var duration = moment.duration(now.diff(calculatedTimeToStartHeating));
+    var duration = moment.duration(calculatedTimeToStartHeating.diff(now));
     var minutes = duration.asMinutes();
 
     if (calculatedTimeIsOverdue || eventAlreadyStarted) {
