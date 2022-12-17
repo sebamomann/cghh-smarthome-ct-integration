@@ -139,7 +139,7 @@ class WebsocketManager {
         const url = "https://lookup.homematic.com:48335/getHost";
 
         var response;
-        var tags = { module: "API", function: "HOMEMATIC LOOKUP" };
+        var tags = { module: "API", function: "HOMEMATIC_LOOKUP" };
         try {
             response = await axios.post(url, payload, { headers });
             Logger.warning({ tags, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
