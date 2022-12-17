@@ -19,7 +19,7 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => { executeCron()
 
 const executeCron = async () => {
     const generalTags = { module: "CRON", function: "GENERAL" };
-    Logger.info({ tags: generalTags, message: "Starting Cronjob" });
+    Logger.info({ tags: generalTags, message: "======= Starting Cronjob =======" });
 
     var count = 1;
     var maxTries = 3;

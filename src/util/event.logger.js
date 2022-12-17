@@ -6,12 +6,6 @@ moment.tz.setDefault("Europe/Berlin");
 
 class EventLogger {
 
-    static startCron() {
-        const influxDb = new InfluxDBManager();
-        const tags = { level: "INFO", module: "CRON", function: "START" };
-        influxDb.sendLog({ tags, message: "Starting Cronjob" });
-    }
-
     /**
      * @param {string} minutes 
      */
