@@ -258,6 +258,10 @@ const handleBookingOfEventHeating = async (event, booking) => {
             // blocked due to existing manual override
             EventLogger.groupUpdatePreheatBlocked(event.bezeichnung, groupState.label);
         }
+    } else {
+        const tags = { module: "CRON", function: "EVENT", group: groupState.label };
+        const message = `Event ${event.bezeichnung} lies too far in the future. Minutes needed: ${minutesNeededToReachDesiredTemperature} - IGNORE`;
+        Logger.debug({ tags, message });
     }
 };
 

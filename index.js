@@ -21,17 +21,16 @@ const executeCron = async () => {
     const generalTags = { module: "CRON", function: "GENERAL" };
     Logger.info({ tags: generalTags, message: "======= Starting Cronjob =======" });
 
-    var count = 1;
     var maxTries = 3;
     var resetNotPossible = {};
 
     // try reset if failed ealryer
     // or its 0 o'clock
     if (moment().hours() === 0 && moment().minutes() === 0 || Object.keys(resetNotPossible).length > 0) {
-        var resetTags = { module: "CRON", function: "RESET", count };
-        Logger.info({ tags: resetTags, message: "Starting nightly reset" });
+        for (var count = 1; count <= maxTries; count++) {
+            var resetTags = { module: "CRON", function: "RESET", attempt: count };
+            Logger.info({ tags: resetTags, message: "Starting nightly reset" });
 
-        while (count <= maxTries) {
             try {
                 resetNotPossible = await resetEverythingIfNotLocked(resetNotPossible);
 
@@ -50,7 +49,6 @@ const executeCron = async () => {
                 }
 
                 await checkServerUrl();
-                count++;
             }
         }
     }
