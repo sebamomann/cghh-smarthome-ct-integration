@@ -232,6 +232,7 @@ const handleBookingOfEventHeating = async (event, booking) => {
     }
 
     var minutesNeededToReachDesiredTemperature = roomConfiguration.getMinutesNeededToReachTemperatureForEvent(event, groupState);
+    minutesNeededToReachDesiredTemperature = Math.round(minutesNeededToReachDesiredTemperature);
     const minpreOfBooking = booking.minpre;
     minutesNeededToReachDesiredTemperature += minpreOfBooking;
     const calculatedTimeToStartHeating = moment(event.startdate).subtract(minutesNeededToReachDesiredTemperature, "minute");
