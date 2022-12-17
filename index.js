@@ -19,7 +19,7 @@ const job = new CronJob(process.env.CRON_DEFINITION, async () => { executeCron()
 
 const executeCron = async () => {
     const generalTags = { module: "CRON", function: "GENERAL" };
-    Logger.info({ generalTags, message: "Starting Cronjob" });
+    Logger.info({ tags: generalTags, message: "Starting Cronjob" });
 
     var count = 1;
     var maxTries = 3;
@@ -29,7 +29,7 @@ const executeCron = async () => {
     // or its 0 o'clock
     if (moment().hours() === 0 && moment().minutes() === 0 || Object.keys(resetNotPossible).length > 0) {
         var resetTags = { module: "CRON", function: "RESET", count };
-        Logger.info({ resetTags, message: "Starting nightly reset" });
+        Logger.info({ tags: resetTags, message: "Starting nightly reset" });
 
         while (count <= maxTries) {
             try {
@@ -39,14 +39,14 @@ const executeCron = async () => {
                     throw new Error(`Cant reset ${Object.keys(resetNotPossible).length} elements`); // gets catched directly
                 }
 
-                Logger.info({ resetTags, message: "Finished nightly reset" });
+                Logger.info({ tags: resetTags, message: "Finished nightly reset" });
             } catch (e) {
                 if (count == maxTries) {
-                    Logger.error({ resetTags, message: e.message });
+                    Logger.error({ tags: resetTags, message: e.message });
                     Uptime.pingUptime("down", e, "CRON");
                     break;
                 } else {
-                    Logger.warn({ resetTags, message: e.message });
+                    Logger.warn({ tags: resetTags, message: e.message });
                 }
 
                 await checkServerUrl();
