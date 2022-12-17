@@ -1,3 +1,6 @@
+const moment = require('moment-timezone');
+moment.tz.setDefault("Europe/Berlin");
+
 class Logger {
 
     static core(data) {
