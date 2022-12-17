@@ -31,7 +31,7 @@ class Logger {
         tags ? tags : {};
         tags["level"] = level;
 
-        console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [${tags.level}] ${JSON.stringify(data.tags)} ${data.message}`);
+        console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] [${tags.level}] ${JSON.stringify(tags)} ${message}`);
 
         const influxDb = new InfluxDBManager();
         tags = { level, ...tags };
