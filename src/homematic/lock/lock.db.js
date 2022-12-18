@@ -63,7 +63,11 @@ class LockDB {
             dataRaw = "{}";
         }
 
-        return JSON.parse(dataRaw);
+        try {
+            return JSON.parse(dataRaw);
+        } catch (e) {
+            return {};
+        }
     }
 }
 
