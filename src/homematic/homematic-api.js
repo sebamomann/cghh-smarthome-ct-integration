@@ -72,7 +72,7 @@ class HomematicApi {
 
                 setTimeout(() => {
                     Logger.warning({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" }, info);
-                    this.callRest(path, payload, attempt++);
+                    this.callRest(path, payload, attempt++, id);
                 }, retryInMs);
             } else {
                 Logger.error({ tags, message: "Could not execute API request: " + e }, info);
