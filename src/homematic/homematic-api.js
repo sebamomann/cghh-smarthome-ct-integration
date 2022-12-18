@@ -52,27 +52,30 @@ class HomematicApi {
         const url = this.API_URL + "hmip/" + path;
 
         var response;
-        var tags = { module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path, request: JSON.stringify(payload) };
+        var tags = { module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
+        const info = { request: payload };
+
         try {
             response = await axios.post(url, payload, { headers });
             Logger.debug({ tags, message: "Api call succeeded" });
 
             return response.data;
         } catch (e) {
-            tags = { ...tags, response: JSON.stringify(e.response?.data) };
+            tags = { ...tags };
+            info.response = e.response?.data;
 
             if (attempt <= maxRetries) {
                 const retryInMs = Math.pow(5000, attempt * 0.5);
 
-                Logger.warning({ tags, message: "Could not execute API request: " + e });
-                Logger.warning({ tags, message: "Retrying in " + retryInMs + " ms" });
+                Logger.warning({ tags, message: "Could not execute API request: " + e }, info);
+                Logger.warning({ tags, message: "Retrying in " + retryInMs + " ms" }, info);
 
                 setTimeout(() => {
-                    Logger.warning({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" });
+                    Logger.warning({ tags: { ...tags, attempt: attempt + 1 }, message: "Retrying request" }, info);
                     this.callRest(path, payload, attempt++);
                 }, retryInMs);
             } else {
-                Logger.error({ tags, message: "Could not execute API request: " + e });
+                Logger.error({ tags, message: "Could not execute API request: " + e }, info);
                 throw Error(e);
             }
         }

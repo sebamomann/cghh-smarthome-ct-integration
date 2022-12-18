@@ -4,31 +4,31 @@ moment.tz.setDefault("Europe/Berlin");
 
 class Logger {
 
-    static core(data) {
-        Logger.log("CORE", data.tags, data.message);
+    static core(data, info = {}) {
+        Logger.log("CORE", data.tags, data.message, info);
     }
 
-    static trace(data) {
-        Logger.log("TRACE", data.tags, data.message);
+    static trace(data, info = {}) {
+        Logger.log("TRACE", data.tags, data.message, info);
     }
 
-    static debug(data) {
-        Logger.log("DEBUG", data.tags, data.message);
+    static debug(data, info = {}) {
+        Logger.log("DEBUG", data.tags, data.message, info);
     }
 
-    static info(data) {
-        Logger.log("INFO", data.tags, data.message);
+    static info(data, info = {}) {
+        Logger.log("INFO", data.tags, data.message, info);
     }
 
-    static warning(data) {
-        Logger.log("WARN", data.tags, data.message);
+    static warning(data, info = {}) {
+        Logger.log("WARN", data.tags, data.message, info);
     }
 
-    static error(data) {
-        Logger.log("ERROR", data.tags, data.message);
+    static error(data, info = {}) {
+        Logger.log("ERROR", data.tags, data.message, info);
     }
 
-    static log(level, tags, message) {
+    static log(level, tags, message, info = {}) {
         tags ? tags : {};
         tags["level"] = level;
 
@@ -36,7 +36,7 @@ class Logger {
 
         const influxDb = new InfluxDBManager();
         tags = { level, ...tags };
-        influxDb.sendLog({ tags, message });
+        influxDb.sendLog({ tags, message }, info);
     }
 }
 

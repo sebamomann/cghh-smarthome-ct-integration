@@ -146,8 +146,9 @@ class WebsocketManager {
             Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] });
             process.env.HOMEMATIC_API_URL = response.data["urlREST"];
         } catch (e) {
-            tags = { ...tags, path: "/getHost", request: JSON.stringify(payload), response: JSON.stringify(e.response?.data) };
-            Logger.error({ tags, message: "Could not execute API request: " + e });
+            tags = { ...tags, path: "/getHost" };
+            const info = { request: payload, response: e.response?.data };
+            Logger.error({ tags, message: "Could not execute API request: " + e }, info);
 
             throw Error(e);
         }

@@ -41,12 +41,15 @@ class InfluxDBManager {
         }
     }
 
-    async sendLog(data) {
+    async sendLog(data, info = {}) {
         const writeApi = this.influx.getWriteApi(this.org, "logs");
         writeApi.useDefaultTags(data.tags ? data.tags : {});
 
         const point = new Point("Default Log");
         point.stringField("log", data.message);
+        if (Object.keys(info).length > 0) {
+            point.stringField("info", JSON.stringify(info));
+        }
         writeApi.writePoint(point);
 
         try {
