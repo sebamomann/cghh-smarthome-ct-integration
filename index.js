@@ -67,6 +67,9 @@ job.start();
 
 // AUSLAGERN
 const checkServerUrl = async () => {
+    var tags = { module: "API", function: "HOMEMATIC_LOOKUP" };
+    Logger.debug({ tags, message: "Fetching Server URL for Homematic API" });
+
     const payload = {
         "clientCharacteristics": {
             "apiVersion": "10",
@@ -86,12 +89,15 @@ const checkServerUrl = async () => {
     const url = "https://lookup.homematic.com:48335/getHost";
 
     var response;
-    var tags = { module: "API", function: "HOMEMATIC_LOOKUP" };
     try {
         response = await axios.post(url, payload, { headers });
-        Logger.warning({ tags, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
-        Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] + "/" });
-        process.env.HOMEMATIC_API_URL = response.data["urlREST"] + "/";
+        const oldUrl = process.env.HOMEMATIC_API_URL;
+        const newUrl = response.data["urlREST"] + "/";
+        if (oldUrl !== newUrl) {
+            Logger.warning({ tags, message: "Old URL: " + oldUrl });
+            Logger.warning({ tags, message: "New URL: " + newUrl });
+            process.env.HOMEMATIC_API_URL = newUrl;
+        }
     } catch (e) {
         tags = { ...tags, path: "/getHost" };
         const info = { request: payload, response: e.response?.data };
