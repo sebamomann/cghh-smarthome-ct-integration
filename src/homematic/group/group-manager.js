@@ -44,7 +44,7 @@ class GroupManager {
     }
 
     async updateTemperature(desiredTemperature, eventName, isIdle = false) {
-        var tags = { module: "CRON", function: "EVENT", group: groupId };
+        var tags = { module: "CRON", function: "EVENT", group: this.groupId };
         // set before data send, otherwise websocket might trigger before lock is set
         const pendingLogsManager = new PendingLogsManager();
         pendingLogsManager.setPendingForGroupId(this.groupId, true, eventName);
