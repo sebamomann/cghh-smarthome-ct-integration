@@ -52,10 +52,11 @@ class HomematicApi {
         const url = this.API_URL + "hmip/" + path;
 
         var response;
-        var tags = { module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "/" + path };
+        var tags = { module: "API", function: "HOMEMATIC", attempt, identifier: id, path: "hmip/" + path };
         const info = { request: payload };
 
         try {
+            Logger.debug({ tags, message: "Calling " + url });
             response = await axios.post(url, payload, { headers });
             Logger.debug({ tags, message: "Api call succeeded" });
 

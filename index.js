@@ -90,7 +90,7 @@ const checkServerUrl = async () => {
     try {
         response = await axios.post(url, payload, { headers });
         Logger.warning({ tags, message: "Old URL: " + process.env.HOMEMATIC_API_URL });
-        Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] });
+        Logger.warning({ tags, message: "New URL: " + response.data["urlREST"] + "/" });
         process.env.HOMEMATIC_API_URL = response.data["urlREST"];
     } catch (e) {
         tags = { ...tags, path: "/getHost" };
