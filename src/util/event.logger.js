@@ -38,26 +38,22 @@ class EventLogger {
     static groupUpdateEvent(currentState, updatedState) {
         const isInitialUpdate = currentState.label === "INIT";
         if (!isInitialUpdate) {
-            this.groupUpdateEventString("FROM", currentState);
+            this.groupUpdateEventString("PRE", currentState);
         }
 
-        const fromTo = isInitialUpdate ? "INIT" : "TOOO";
+        const fromTo = isInitialUpdate ? "INIT" : "POST";
         this.groupUpdateEventString(fromTo, updatedState);
     }
 
-    static groupUpdateEventString(fromTo, state) {
-        var message = `[${this.t()}] [Event] [GRP UPDATE] [%s] %s`;
+    static groupUpdateEventString(fromTo, groupState) {
+        var message = groupState.label;
 
-        const values = [
-            fromTo,
-            state.label
-        ];
+        if (groupState.setTemperature) message += ` - SetTemp: ${groupState.setTemperature.toFixed(1)}`;
+        if (groupState.temperature) message += ` - CurrTemp: ${groupState.temperature.toFixed(1)}`;
+        if (groupState.humidity) message += ` - Humidity: ${groupState.humidity.toFixed(1)}`;
 
-        if (state.setTemperature) message += ` - SetTemp: ${state.setTemperature.toFixed(1)}`;
-        if (state.temperature) message += ` - CurrTemp: ${state.temperature.toFixed(1)}`;
-        if (state.humidity) message += ` - Humidity: ${state.humidity.toFixed(1)}`;
-
-        console.log(message, ...values);
+        const tags = { module: "WS", function: "GROUP_UPDATE", group: groupState.label.replace(/ /g, '_'), snapshot: fromTo };
+        Logger.debug({ tags, message });
     }
 
     static deviceUpdateEvent(currentState, updatedState, channelIndex) {
@@ -66,54 +62,48 @@ class EventLogger {
 
         const isInitialUpdate = currentState.label === "INIT";
         if (!isInitialUpdate) {
-            this.deviceUpdateEventString("FROM", currentState, currentChannel);
+            this.deviceUpdateEventString("PRE", currentState, currentChannel);
         }
 
-        const fromTo = isInitialUpdate ? "INIT" : "TOOO";
+        const fromTo = isInitialUpdate ? "INIT" : "POST";
         this.deviceUpdateEventString(fromTo, updatedState, updatedChannel);
     }
 
-    static deviceUpdateEventString(fromTo, state, channel) {
+    static deviceUpdateEventString(fromTo, deviceState, channel) {
         var message = `[${this.t()}] [Event] [DVC UPDATE] [%s] %s`;
-
-        const values = [
-            fromTo,
-            state.label
-        ];
 
         if (channel.setTemperature) message += ` - SetTemp: ${channel.setTemperature.toFixed(1)}`;
         if (channel.temperature) message += ` - CurrTemp: ${channel.temperature.toFixed(1)}`;
-        if (channel.valvePosition !== undefined && channel.valvePosition !== null) message += ` - ValvePos: ${channel.valvePosition.toFixed(1)}`;
+        if (channel.valvePosition) message += ` - ValvePos: ${channel.valvePosition.toFixed(1)}`;
         if (channel.index) message += ` - Index: ${channel.index}`;
 
-        console.log(message, ...values);
+        const tags = { module: "WS", function: "DEVICE_UPDATE", device: deviceState.label.replace(/ /g, '_'), snapshot: fromTo, channel: channel.index };
+        Logger.debug({ tags, message });
     }
 
     static weatherUpdateEvent(currentState, updatedState) {
         const isInitialUpdate = currentState.label === "INIT";
         if (!isInitialUpdate) {
-            this.weatherUpdateEventString("FROM", currentState);
+            this.weatherUpdateEventString("PRE", currentState);
         }
 
-        const fromTo = isInitialUpdate ? "INIT" : "TOOO";
+        const fromTo = isInitialUpdate ? "INIT" : "POST";
         this.weatherUpdateEventString(fromTo, updatedState);
     }
 
     static weatherUpdateEventString(fromTo, state) {
-        const values = [
-            fromTo,
-            state.label,
-            state.temperature.toFixed(1),
-            state.minTemperature.toFixed(1),
-            state.maxTemperature.toFixed(1),
-            state.humidity.toFixed(1),
-            state.windSpeed.toFixed(4),
-            state.vaporAmount.toFixed(4),
-            state.weatherCondition,
-            state.weatherDayTime
-        ];
+        var message = `${state.label} CurrTemp: ${state.temperature.toFixed(1)}`;
+        message += ` - MinTemp: ${state.minTemperature.toFixed(1)}`;
+        message += ` - MaxTemp: ${state.maxTemperature.toFixed(1)}`;
+        message += ` - Humidity: ${state.humidity.toFixed(1)}`;
+        message += ` - WindSpeed: ${state.windSpeed.toFixed(4)}`;
+        message += ` - VaporAmount: ${state.vaporAmount.toFixed(4)}`;
+        message += ` - WeatherCond: ${state.weatherCondition}`;
+        message += ` - Time: ${state.weatherDayTime}`;
 
-        console.log(`[${this.t()}] [Event] [WTR UPDATE] [%s] %s CurrTemp: %d - MinTemp: %d - MaxTemp: %d - Humidity: %d - WindSpeed: %d - VaporAmount: %d - WeatherCond: %s - Time: %s`, ...values);
+        const tags = { module: "WS", function: "WEATHER_UPDATE", location: state.label.replace(/ /g, '_'), snapshot: fromTo };
+        Logger.debug({ tags, message });
+
     }
 
     static groupUpdateEventToInflux(currentState, updatedState) {
@@ -124,8 +114,20 @@ class EventLogger {
             const pendigObj = pendingLogsManager.getPendingObjectByGroupId(currentState.id);
             const isPending = pendigObj?.pending;
 
-            influxDB.sendGroupLog(currentState, updatedState, isPending, pendigObj?.eventName);
+            var tags = {
+                module: "WS",
+                function: "GROUP_UPDATE",
+                group: currentState.label.replace(/\s/g, ""),
+                type: (isPending ? "AUTO" : "MANU"),
+            };
 
+            if (isPending) {
+                tags = { ...tags, event: eventName.replace(/\s/g, "") };
+            }
+            const message = `${currentState.label} - Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature}`;
+            Logger.core({ tags, message });
+
+            // resolve pendig log
             if (isPending) pendingLogsManager.setPendingForGroupId(currentState.id, false, null);
         }
     }
