@@ -52,9 +52,9 @@ class GroupManager {
         try {
             await this.homematicAPI.setTemperatureForGroup(this.groupId, desiredTemperature);
 
-            Logger.debug({ tags, message: `Set temperature of ${groupId} to ${desiredTemperature}` });
+            Logger.debug({ tags, message: `Set temperature of ${this.groupId} to ${desiredTemperature}` });
         } catch (e) {
-            Logger.error({ tags, message: `Can't set temperature of ${groupId} to ${desiredTemperature}: ${e}` });
+            Logger.error({ tags, message: `Can't set temperature of ${this.groupId} to ${desiredTemperature}: ${e}` });
 
             // revert pending
             pendingLogsManager.setPendingForGroupId(this.groupId, false, null);
