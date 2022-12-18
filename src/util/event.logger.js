@@ -70,7 +70,7 @@ class EventLogger {
     }
 
     static deviceUpdateEventString(fromTo, deviceState, channel) {
-        var message = `[${this.t()}] [Event] [DVC UPDATE] [%s] %s`;
+        var message = deviceState.label;
 
         if (channel.setTemperature) message += ` - SetTemp: ${channel.setTemperature.toFixed(1)}`;
         if (channel.temperature) message += ` - CurrTemp: ${channel.temperature.toFixed(1)}`;
