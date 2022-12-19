@@ -116,10 +116,15 @@ async function manageLocks() {
     const roomConfigs = roomConfigurationDB.getAll();
 
     var tags = { module: "CRON", function: "LOCKS" };
-    Logger.debug({ tags, message: "Resolving locks" });
+    Logger.debug({ tags, message: "Starting lock resolving" });
     for (const roomConfig of roomConfigs) {
-        await manageLockForRoom(roomConfig);
+        try {
+          await manageLockForRoom(roomConfig);
+        } catch (e) {
+            Logger.error({ tags: {...tags,  group: roomConfig.name.replace(/ /g, '_') }, message: "Lock management failed for room: " + e });
+        }
     }
+    Logger.debug({ tags, message: "Finished lock resolving" });
 }
 
 /**
@@ -144,7 +149,6 @@ async function manageLockForRoom(roomConfig) {
     }
 
     if (lock.isExpired()) {
-        Logger.debug({ tags, message: "Room lock expired" });
         const groupStateDB = new GroupStateDB();
         const groupState = groupStateDB.getById(hmip_groupId);
         const groupManager = new GroupManager(groupState.id, roomConfig, groupState);
