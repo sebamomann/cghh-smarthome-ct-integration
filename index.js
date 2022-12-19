@@ -39,6 +39,7 @@ const executeCron = async () => {
                 }
 
                 Logger.info({ tags: resetTags, message: "Finished nightly reset" });
+                break;
             } catch (e) {
                 if (count == maxTries) {
                     Logger.error({ tags: resetTags, message: e.message });
