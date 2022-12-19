@@ -109,7 +109,6 @@ class EventLogger {
     static groupUpdateEventToInflux(currentState, updatedState) {
         if (currentState.setTemperature !== updatedState.setTemperature) {
             const pendingLogsManager = new PendingLogsManager();
-            const influxDB = new InfluxDBManager();
 
             const pendigObj = pendingLogsManager.getPendingObjectByGroupId(currentState.id);
             const isPending = pendigObj?.pending;
@@ -122,7 +121,7 @@ class EventLogger {
             };
 
             if (isPending) {
-                tags = { ...tags, event: eventName.replace(/\s/g, "") };
+                tags = { ...tags, event: pendigObj.eventName.replace(/\s/g, "") };
             }
             const message = `${currentState.label} - Changed setTemperature from ${currentState.setTemperature} to ${updatedState.setTemperature}`;
             Logger.core({ tags, message });
