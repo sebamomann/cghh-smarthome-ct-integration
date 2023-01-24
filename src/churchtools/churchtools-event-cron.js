@@ -52,13 +52,15 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
     const resetNotPossible = {};
 
     // set boolean if this reset is a retry (if ealier one reset didnt work)
-    const earlierResetNotPossibleBool = Object.keys(earlierResetNotPossible).length >= 0;
+    const earlierResetNotPossibleBool = Object.keys(earlierResetNotPossible).length > 0;
 
     for (const roomConfig of roomConfigs) {
         const hmip_groupId = roomConfig.homematicId;
 
         // dont reset, if previous reset worked
         if (earlierResetNotPossibleBool && earlierResetNotPossible[hmip_groupId] === undefined) {
+            var tags = { module: "CRON", function: "RESET", group: roomConfig.name.replace(/ /g, '_') };
+            Logger.debug({ tags, message: `Previous reset worked - SKIP - ${earlierResetNotPossibleBool} - ${earlierResetNotPossible[hmip_groupId]}` }); 
             continue;
         }
 
