@@ -151,6 +151,14 @@ class WebsocketManager {
                 Logger.warning({ tags, message: "New URL: " + newUrl });
                 process.env.HOMEMATIC_API_URL = newUrl;
             }
+
+            const oldUrlWs = process.env.HOMEMATIC_WS_URL;
+            const newUrlWs = response.data["urlWebSocket"] + "/";
+            if (oldUrlWs !== newUrlWs) {
+                Logger.warning({ tags, message: "Old URL WS: " + oldUrlWs });
+                Logger.warning({ tags, message: "New URL WS: " + newUrlWs });
+                process.env.HOMEMATIC_WS_URL = newUrlWs;
+            }
         } catch (e) {
             tags = { ...tags, path: "/getHost" };
             const info = { request: payload, response: e.response?.data };
