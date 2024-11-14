@@ -2,6 +2,7 @@ const { Lock } = require("./lock");
 
 const fs = require("fs");
 const fse = require("fs-extra");
+const { Logger } = require("../../util/logger");
 
 const FILE_NAME = process.cwd() + "/persistent/locks.json";
 
@@ -17,6 +18,9 @@ class LockDB {
      */
     getByGroupId(hmip_groupId) {
         const json_data = this.getFileContent();
+        var tags = { module: "LockDB", function: "getByGroupId", group: hmip_groupId };
+        Logger.debug({ tags, message: "LockDB State: " + JSON.stringify(json_data) });
+
         const lockRaw = json_data[hmip_groupId];
 
         if (!lockRaw) throw new Error("Lock not found");
