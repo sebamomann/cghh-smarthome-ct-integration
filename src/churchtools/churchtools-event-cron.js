@@ -57,21 +57,23 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
     for (const roomConfig of roomConfigs) {
         const hmip_groupId = roomConfig.homematicId;
 
+        var tags = { module: "CRON", function: "RESET", group: roomConfig.name.replace(/ /g, '_') };
+        Logger.debug({ tags, message: `Handling room ` + JSON.stringify(roomConfig) });
+
         // dont reset, if previous reset worked
         if (earlierResetNotPossibleBool && earlierResetNotPossible[hmip_groupId] === undefined) {
-            var tags = { module: "CRON", function: "RESET", group: roomConfig.name.replace(/ /g, '_') };
             Logger.debug({ tags, message: `Previous reset worked - SKIP - ${earlierResetNotPossibleBool} - ${earlierResetNotPossible[hmip_groupId]}` }); 
             continue;
         }
 
-        var tags = { module: "CRON", function: "RESET", group: roomConfig.name.replace(/ /g, '_') };
         try {
             try {
                 const lockDB = new LockDB();
-                const lock = lockDB.getByGroupId(hmip_groupId);
+                lockDB.getByGroupId(hmip_groupId);
                 Logger.warn({ tags, message: `Room reset not possible - LOCKED` });
                 continue; // element is locked - dont reset
             } catch (e) {
+                Logger.debug({ tags, message: e });
                 await homematicAPI.setTemperatureForGroup(hmip_groupId, roomConfig.desiredTemperatureIdle);
                 Logger.debug({ tags, message: `Room reset successful` });
                 delete resetNotPossible[hmip_groupId];
