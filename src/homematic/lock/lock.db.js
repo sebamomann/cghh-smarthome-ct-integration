@@ -19,7 +19,7 @@ class LockDB {
     getByGroupId(hmip_groupId) {
         const json_data = this.getFileContent();
         var tags = { module: "LockDB", function: "getByGroupId", group: hmip_groupId };
-        Logger.debug({ tags, message: "LockDB State: " + JSON.stringify(json_data) });
+        Logger.trace({ tags, message: "LockDB State: " + JSON.stringify(json_data) });
 
         const lockRaw = json_data[hmip_groupId];
 

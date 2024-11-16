@@ -70,7 +70,7 @@ async function resetEverythingIfNotLocked(earlierResetNotPossible) {
             try {
                 const lockDB = new LockDB();
                 lockDB.getByGroupId(hmip_groupId);
-                Logger.warn({ tags, message: `Room reset not possible - LOCKED` });
+                Logger.warning({ tags, message: `Room reset not possible - LOCKED` });
                 continue; // element is locked - dont reset
             } catch (e) {
                 Logger.debug({ tags, message: e });
