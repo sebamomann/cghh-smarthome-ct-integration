@@ -46,7 +46,7 @@ const executeCron = async () => {
                     Uptime.pingUptime("down", e, "CRON");
                     break;
                 } else {
-                    Logger.warn({ tags: resetTags, message: e.message });
+                    Logger.warning({ tags: resetTags, message: e.message });
                 }
 
                 await checkServerUrl();
