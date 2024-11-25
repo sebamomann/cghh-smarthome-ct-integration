@@ -33,7 +33,7 @@ class WebsocketManager {
         var tags = { module: "WS" };
 
         await this.checkServerUrl();
-        this.websocket = new WebSocket(this.url, {
+        this.websocket = new WebSocket(process.env.HOMEMATIC_WS_URL, {
             headers: this.headers
         });
 
