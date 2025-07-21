@@ -69,9 +69,9 @@ pipeline {
                             echo "cant remove container - it does not exist"
                         }
                         sh "docker run --name ${name} \
-                                -v /var/lib/docker/volumes/cghh-smarthome-ct-integration/_data/.env:/usr/src/app/.env \
-                                -v /var/lib/docker/volumes/cghh-smarthome-ct-integration/_data/config:/usr/src/app/config \
-                                -v /var/lib/docker/volumes/cghh-smarthome-ct-integration/_data/persistent:/usr/src/app/persistent \
+                                -v /var/www/vhosts/cg-heidelsheim.de/ct-integration.smarthome.cg-heidelsheim.de/volumes/.env:/usr/src/app/.env \
+                                -v /var/www/vhosts/cg-heidelsheim.de/ct-integration.smarthome.cg-heidelsheim.de/volumes/config:/usr/src/app/config \
+                                -v /var/www/vhosts/cg-heidelsheim.de/ct-integration.smarthome.cg-heidelsheim.de/volumes/persistent:/usr/src/app/persistent \
                                 --network=cghh-smarthome \
                                 --restart unless-stopped \
                                 -d ${image_name}"
